@@ -40,7 +40,14 @@ makeAutomaton :: ParsedRegex -> Automaton
 makeAutomaton = error "makeAutomaton is undefined"
 
 parse :: TokenizedRegex -> ParsedRegex
-parse = forceParsed . parseNegations . parseGroups . parseEscapes . makeMaybeParsed
+parse =
+    forceParsed .
+    parseLeftovers .
+    parseWildcards .
+    parseNegations .
+    parseGroups .
+    parseEscapes .
+    makeMaybeParsed
 
 forceParsed :: PartiallyParsedRegex -> ParsedRegex
 forceParsed (Bare (c,t):rest) = error $ "Could not parse char: " ++ [c]
@@ -50,6 +57,7 @@ forceParsed [] = []
 makeMaybeParsed :: TokenizedRegex -> PartiallyParsedRegex
 makeMaybeParsed = map Bare
 
+-- TODO: Refactor to make the parsing logic a bit less ugly
 parseEscapes :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseEscapes (Bare (_, Backslash):Bare (c, OtherChar):rest) =
     error ("Character '" ++ [c] ++ "' may not be escaped")
@@ -64,3 +72,9 @@ parseGroups = error "parseGroups undefined"
 
 parseNegations :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseNegations = error "parseNegations undefined"
+
+parseWildcards :: PartiallyParsedRegex -> PartiallyParsedRegex
+parseWildcards = error "parseWildcards undefined"
+
+parseLeftovers :: PartiallyParsedRegex -> PartiallyParsedRegex
+parseLeftovers = error "parseLeftovers undefined"
