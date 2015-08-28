@@ -28,6 +28,8 @@ type TokenizedRegex = [(Char, TokenType)]
 -- List is of *regular expression* tokens
 type ParsedRegex = [Token]
 
+-- If I were really hardcore, each parsing stage would have its own type.
+-- But I'm not.
 data MaybeParsed = Bare (Char, TokenType) | Parsed Token
 
 type PartiallyParsedRegex = [MaybeParsed]
@@ -78,7 +80,11 @@ parseGroups :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseGroups = error "parseGroups undefined"
 
 parseRepeats :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseRepeats = error "parseRepeats undefined"
+parseRepeats (Bare (c,Star):Parsed token:rest) = (Parsed (Repeated token)):parseRepeats rest
+parseRepeats (Bare (c,Star):_:rest) = error "Unexpected * after unparsed input"
+parseRepeats (Bare (c,Star):[]) = error "Unexpected * at beginning of input"
+parseRepeats (other:rest) = other:parseRepeats rest
+parseRepeats [] = []
 
 parseNegations :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseNegations = error "parseNegations undefined"
