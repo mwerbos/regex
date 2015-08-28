@@ -40,7 +40,16 @@ incrementIndex state = state { currentIndex = (currentIndex state) + 1 }
 
 -- Runs the automaton over every current possible match, with the given character
 runStatesOnce :: Automaton -> ProcessingState -> Char -> ProcessingState
-runStatesOnce = error "runStatesOnce undefined" 
+runStatesOnce aut st c = runNonEpsilonMoves aut (runEpsilonMoves aut st) c
+
+-- Takes all the possible matches and multiplies them by the places they can go
+-- via only epsilon moves.
+runEpsilonMoves :: Automaton -> ProcessingState -> ProcessingState
+runEpsilonMoves = error "runEpsilonMoves undefined"
+
+-- Takes all possible matches and makes them go places based on actual moves
+runNonEpsilonMoves :: Automaton -> ProcessingState -> Char -> ProcessingState
+runNonEpsilonMoves = error "runNonEpsilonMoves undefined"
 
 -- Removes all states that are the final state and turns them into matches
 popFinalStates :: ProcessingState -> ProcessingState
