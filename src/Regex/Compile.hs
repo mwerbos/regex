@@ -1,6 +1,7 @@
 module Regex.Compile where
 
 import Regex.Data
+import Data.Graph.Inductive(empty,Gr(..))
 
 data TokenType =
     Backslash |
@@ -37,7 +38,10 @@ tokenize :: Regex -> TokenizedRegex
 tokenize (Regex str) = map (\x -> (x, tokenType x)) str
 
 makeAutomaton :: ParsedRegex -> Automaton
-makeAutomaton = error "makeAutomaton is undefined"
+makeAutomaton tokens = Automaton { stateMap = foldl addToken empty tokens }
+
+addToken :: Gr State Edge -> Token -> Gr State Edge
+addToken = error "addToken undefined"
 
 parse :: TokenizedRegex -> ParsedRegex
 parse =
