@@ -9,6 +9,7 @@ data TokenType =
     RBracket |
     Dot |
     Carat |
+    Star |
     OtherChar
 
 -- Token is here a token within a Regex string,
@@ -19,6 +20,7 @@ tokenType '[' = LBracket
 tokenType ']' = RBracket
 tokenType '.' = Dot 
 tokenType '^' = Carat
+tokenType '*' = Star
 tokenType _ = OtherChar
 
 type TokenizedRegex = [(Char, TokenType)]
@@ -46,10 +48,11 @@ addToken = error "addToken undefined"
 parse :: TokenizedRegex -> ParsedRegex
 parse =
     forceParsed .
-    parseLeftovers .
-    parseWildcards .
+    parseRepeats .
     parseNegations .
     parseGroups .
+    parseLeftovers .
+    parseWildcards .
     parseEscapes .
     makeMaybeParsed
 
@@ -74,15 +77,28 @@ parseEscapes [] = []
 parseGroups :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseGroups = error "parseGroups undefined"
 
+parseRepeats :: PartiallyParsedRegex -> PartiallyParsedRegex
+parseRepeats = error "parseRepeats undefined"
+
 parseNegations :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseNegations = error "parseNegations undefined"
 
 parseWildcards :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseWildcards = error "parseWildcards undefined"
+parseWildcards = map convertDots
+    where convertDots :: MaybeParsed -> MaybeParsed
+          convertDots (Bare ('.',Dot)) = Parsed Wildcard
+          convertDots other = other
 
 parseLeftovers :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseLeftovers = map convertChars
   where convertChars :: MaybeParsed -> MaybeParsed
         convertChars (Bare (c, OtherChar)) = Parsed (Single c)
+        -- Let brackets, negations, and repeats pass through unchanged
+        convertChars (Bare (c, LBracket)) = Bare (c, LBracket)
+        convertChars (Bare (c, RBracket)) = Bare (c, RBracket)
+        convertChars (Bare (c, Carat)) = Bare (c, Carat)
+        convertChars (Bare (c, Star)) = Bare (c, Star)
+        -- Let parsed tokens pass through unchanged
         convertChars (Parsed token) = Parsed token
+        -- Expect not to see any other type of character (not strictly necessary)
         convertChars _ = error "parse error when running parseLeftovers"
