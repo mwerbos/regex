@@ -1,14 +1,11 @@
 module Regex (Regex(..), matchExpression, Interval(..)) where
 
 import Regex.Data
+import Regex.Preprocess
 
 matchExpression :: Regex -> String -> [Interval]
 matchExpression regex string = runAutomaton automaton string
   where automaton = processRegex regex
-
--- Pre-processes regex into a nondeterministic finite state automaton
-processRegex :: Regex -> Automaton
-processRegex = error "processRegex not implemented" 
 
 runAutomaton :: Automaton -> String -> [Interval]
 runAutomaton automaton string = endIntervals
