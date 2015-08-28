@@ -25,15 +25,36 @@ type TokenizedRegex = [(Char, TokenType)]
 -- List is of *regular expression* tokens
 type ParsedRegex = [Token]
 
+data MaybeParsed = Bare (Char, TokenType) | Parsed Token
+
+type PartiallyParsedRegex = [MaybeParsed]
+
 -- Pre-processes regex into a nondeterministic finite state automaton
 processRegex :: Regex -> Automaton
 processRegex = makeAutomaton . parse . tokenize
 
-parse :: TokenizedRegex -> ParsedRegex
-parse = error "parse is undefined"
-
 tokenize :: Regex -> TokenizedRegex
-tokenize = error "tokenize is undefined"
+tokenize (Regex str) = map (\x -> (x, tokenType x)) str
 
 makeAutomaton :: ParsedRegex -> Automaton
 makeAutomaton = error "makeAutomaton is undefined"
+
+parse :: TokenizedRegex -> ParsedRegex
+parse = forceParsed . parseNegations . parseGroups . parseEscapes . makeMaybeParsed
+
+forceParsed :: PartiallyParsedRegex -> ParsedRegex
+forceParsed (Bare (c,t):rest) = error $ "Could not parse char: " ++ [c]
+forceParsed (Parsed t:rest) = t:forceParsed rest
+forceParsed [] = []
+
+makeMaybeParsed :: TokenizedRegex -> PartiallyParsedRegex
+makeMaybeParsed = map Bare
+
+parseEscapes :: PartiallyParsedRegex -> PartiallyParsedRegex
+parseEscapes = error "parseEscapes undefined"
+
+parseGroups :: PartiallyParsedRegex -> PartiallyParsedRegex
+parseGroups = error "parseGroups undefined"
+
+parseNegations :: PartiallyParsedRegex -> PartiallyParsedRegex
+parseNegations = error "parseNegations undefined"
