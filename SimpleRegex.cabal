@@ -53,7 +53,7 @@ library
                    Regex.Compile
   
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.6, text >=0.11, containers, fgl
+  build-depends:       base >=4.6, text >=0.11, containers, fgl >= 5.5.2
   
   -- Directories containing source files.
   -- hs-source-dirs:      

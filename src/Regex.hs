@@ -3,6 +3,10 @@ module Regex (Regex(..), matchExpression, Interval(..)) where
 import Regex.Data
 import Regex.Compile
 
+import Data.Graph.Inductive.PatriciaTree(Gr(..))
+import Data.Graph.Inductive.Graph(lab,lneighbors,matchAny,labfilter,Node)
+import Data.Maybe(catMaybes)
+
 matchExpression :: Regex -> String -> [Interval]
 matchExpression regex string = runAutomaton automaton string
   where automaton = processRegex regex
@@ -17,6 +21,7 @@ data ProcessingState = ProcessingState {
     possibleMatches :: [PossibleMatch],
     currentIndex :: Int,
     currentMatches :: [Interval],
+    -- TODO: Put this into the automaton!!
     endState :: State -- End state of the automaton. Probably doesn't belong here.
 }
 
@@ -45,7 +50,23 @@ runStatesOnce aut st c = runNonEpsilonMoves aut (runEpsilonMoves aut st) c
 -- Takes all the possible matches and multiplies them by the places they can go
 -- via only epsilon moves.
 runEpsilonMoves :: Automaton -> ProcessingState -> ProcessingState
-runEpsilonMoves = error "runEpsilonMoves undefined"
+runEpsilonMoves automaton state = state { possibleMatches = new_possibilities }
+  where new_possibilities = concat $ map getEpsilonFriends (possibleMatches state)
+        getEpsilonFriends :: PossibleMatch -> [PossibleMatch]
+        getEpsilonFriends (P {matchState = s, startIndex = i}) =
+            map (\new_state -> P {matchState = new_state, startIndex = i}) $
+            findNeighborsOfType (== Epsilon) s (stateMap automaton)
+
+-- Utility for dealing with FGL
+-- Filter for nodes with this label, then filter for certain edges out of it,
+-- then return all of the labels of the nodes at the end of those edges.
+findNeighborsOfType :: Eq a => (b -> Bool) -> a -> Gr a b -> [a]
+findNeighborsOfType edge_pred label graph = labels_of_neighbors filtered_neighbors
+  where labels_of_neighbors filtered_neighbors = catMaybes $ map (lab graph) filtered_neighbors
+        filtered_neighbors = map snd $ filter (\(edge_label,node) -> edge_pred edge_label) neighbors
+        neighbors = lneighbors graph node_for_label
+        ((_,node_for_label,_,_),empty) = matchAny graph_with_only_this_label
+        graph_with_only_this_label = labfilter (==label) graph
 
 -- Takes all possible matches and makes them go places based on actual moves
 runNonEpsilonMoves :: Automaton -> ProcessingState -> Char -> ProcessingState
