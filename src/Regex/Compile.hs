@@ -81,4 +81,8 @@ parseWildcards :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseWildcards = error "parseWildcards undefined"
 
 parseLeftovers :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseLeftovers = error "parseLeftovers undefined"
+parseLeftovers = map convertChars
+  where convertChars :: MaybeParsed -> MaybeParsed
+        convertChars (Bare (c, OtherChar)) = Parsed (Single c)
+        convertChars (Parsed token) = Parsed token
+        convertChars _ = error "parse error when running parseLeftovers"
