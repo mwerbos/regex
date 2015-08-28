@@ -1,26 +1,6 @@
 module Regex (Regex(..), matchExpression, Interval(..)) where
 
-import Data.Graph.Inductive.PatriciaTree
-
-data Regex = Regex String deriving (Show, Eq)
-
--- An interval. (x,y) => y must > x
-data Interval = Interval (Int, Int) deriving (Show, Eq)
-
--- Just a wrapped int
-data State = S Int deriving (Show, Eq, Ord)
-
--- An edge in the graph can be a token or an epsilon-transition
--- (a transition requiring 0 characters to match)
-data Edge = Token | Epsilon
-
-data Token = Single Char | Group [Char] | NegGroup [Char] | Wildcard
-
--- A nondeterministic finite automaton
-data Automaton = Automaton {
-  stateMap :: Gr State Edge, -- Graph with nodes that are states, edges
-  stateList :: [State]
-}
+import Regex.Data
 
 matchExpression :: Regex -> String -> [Interval]
 matchExpression regex string = runAutomaton automaton string
@@ -31,4 +11,19 @@ processRegex :: Regex -> Automaton
 processRegex = error "processRegex not implemented" 
 
 runAutomaton :: Automaton -> String -> [Interval]
-runAutomaton = error "runAutomaton not implemented"
+runAutomaton automaton string = endIntervals
+  where (endStates, endIntervals) = foldl (runAutomatonOnce automaton) ([S 0],[]) string
+
+runAutomatonOnce :: Automaton -> ([State],[Interval]) -> Char -> ([State],[Interval])
+runAutomatonOnce automaton (states, intervals) char = (popped_states, popped_intervals)
+        -- First get new states by running the automaton
+  where new_states = runStatesOnce automaton states char
+        -- Then pop any final states onto the intervals list
+        (popped_states,popped_intervals) = popFinalStates new_states intervals
+        
+
+popFinalStates :: [State] -> [Interval] -> ([State], [Interval])
+popFinalStates = error "popFinalStates undefined"
+
+runStatesOnce :: Automaton -> [State] -> Char -> [State]
+runStatesOnce = error "runStatesOnce undefined" 
