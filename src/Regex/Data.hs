@@ -12,7 +12,7 @@ data State = S Int deriving (Show, Eq, Ord)
 
 -- An edge in the graph can be a token or an epsilon-transition
 -- (a transition requiring 0 characters to match)
-data Edge = Token | Epsilon deriving (Show, Eq)
+data Edge = T Token | Epsilon deriving (Show, Eq)
 
 -- A regex token
 data Token =
@@ -22,6 +22,7 @@ data Token =
     Or Token Token |
     Repeated Token |
     Wildcard
+  deriving (Show, Eq)
 
 -- A nondeterministic finite automaton
 data Automaton = Automaton {

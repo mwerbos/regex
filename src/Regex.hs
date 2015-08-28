@@ -2,6 +2,7 @@ module Regex (Regex(..), matchExpression, Interval(..)) where
 
 import Regex.Data
 import Regex.Compile
+import Regex.Match
 
 import Data.Graph.Inductive.PatriciaTree(Gr(..))
 import Data.Graph.Inductive.Graph(lab,lneighbors,matchAny,labfilter,Node)
@@ -70,7 +71,17 @@ findNeighborsOfType edge_pred label graph = labels_of_neighbors filtered_neighbo
 
 -- Takes all possible matches and makes them go places based on actual moves
 runNonEpsilonMoves :: Automaton -> ProcessingState -> Char -> ProcessingState
-runNonEpsilonMoves = error "runNonEpsilonMoves undefined"
+runNonEpsilonMoves automaton state char =
+    state { possibleMatches = new_possibilities }
+    where new_possibilities = concat $ map getMatches (possibleMatches state)
+          getMatches :: PossibleMatch -> [PossibleMatch]
+          getMatches (P {matchState = s, startIndex = i}) =
+              map (\new_state -> P {matchState = new_state, startIndex = i}) $
+              findNeighborsOfType (matches char) s (stateMap automaton)
+
+matches :: Char -> Edge -> Bool
+matches _ Epsilon = False
+matches c (T token) = matchesToken c token
 
 -- Removes all states that are the final state and turns them into matches
 popFinalStates :: ProcessingState -> ProcessingState

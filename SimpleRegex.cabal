@@ -51,6 +51,7 @@ library
   exposed-modules: Regex
                    Regex.Data
                    Regex.Compile
+                   Regex.Match
   
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.6, text >=0.11, containers, fgl >= 5.5.2
