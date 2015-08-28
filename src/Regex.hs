@@ -1,7 +1,7 @@
 module Regex (Regex(..), matchExpression, Interval(..)) where
 
 import Regex.Data
-import Regex.Preprocess
+import Regex.Compile
 
 matchExpression :: Regex -> String -> [Interval]
 matchExpression regex string = runAutomaton automaton string

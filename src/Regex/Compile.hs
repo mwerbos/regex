@@ -1,4 +1,4 @@
-module Regex.Preprocess where
+module Regex.Compile where
 
 import Regex.Data
 
