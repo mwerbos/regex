@@ -49,8 +49,6 @@ library
   hs-source-dirs: src
 
   exposed-modules: Regex
-                   Regex.Tokenizer
-                   Regex.Data
   
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.6, text >=0.11, containers
