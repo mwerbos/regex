@@ -51,8 +51,9 @@ makeMaybeParsed :: TokenizedRegex -> PartiallyParsedRegex
 makeMaybeParsed = map Bare
 
 parseEscapes :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseEscapes (Bare (_, Backslash):Bare (c, OtherChar):rest) = Parsed (Single c) : parseEscapes rest
-parseEscapes (Bare (_, Backslash):Bare (c,_):rest) = error ("Character '" ++ [c] ++ "' may not be escaped")
+parseEscapes (Bare (_, Backslash):Bare (c, OtherChar):rest) =
+    error ("Character '" ++ [c] ++ "' may not be escaped")
+parseEscapes (Bare (_, Backslash):Bare (c,_):rest) = Parsed (Single c) : parseEscapes rest
 -- This next case shouldn't happen since we parse escapes first
 parseEscapes (Bare (_, Backslash):_:rest) = error "Can't escape token"
 parseEscapes (_:rest) = parseEscapes rest
