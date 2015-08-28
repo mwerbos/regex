@@ -20,6 +20,7 @@ data Token =
     Group [Char] |
     NegGroup [Char] |
     Or Token Token |
+    Repeated Token |
     Wildcard
 
 -- A nondeterministic finite automaton
