@@ -28,9 +28,16 @@ type TokenizedRegex = [(Char, TokenType)]
 -- List is of *regular expression* tokens
 type ParsedRegex = [Token]
 
+data IsNegated = Negated | Unnegated
+
 -- If I were really hardcore, each parsing stage would have its own type.
 -- But I'm not.
-data MaybeParsed = Bare (Char, TokenType) | Parsed Token
+data MaybeParsed =
+    Bare (Char, TokenType) |
+    Parsed Token |
+    -- Should not contain recursive PartiallyParsedGroups.
+    -- TODO: Enforce this somehow? By adding another wrapper?
+    PartiallyParsedGroup [MaybeParsed] IsNegated
 
 type PartiallyParsedRegex = [MaybeParsed]
 
@@ -51,7 +58,6 @@ parse :: TokenizedRegex -> ParsedRegex
 parse =
     forceParsed .
     parseRepeats .
-    parseNegations .
     parseGroups .
     parseLeftovers .
     parseWildcards .
@@ -77,7 +83,30 @@ parseEscapes (_:rest) = parseEscapes rest
 parseEscapes [] = []
 
 parseGroups :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseGroups = error "parseGroups undefined"
+parseGroups tokens = map (innerParseGroup . maybeNegate) (makeGroupPiles tokens)
+
+-- For each PartiallyParsed Group, if it starts with a carat,
+-- negates the group.
+maybeNegate :: MaybeParsed -> MaybeParsed
+maybeNegate (PartiallyParsedGroup ((Bare (_, Carat)):rest) Unnegated) =
+  PartiallyParsedGroup rest Negated
+maybeNegate other = other
+
+-- Looks for [ and ] and just puts everything between them in a PartiallyParsedGroup.
+makeGroupPiles :: PartiallyParsedRegex -> PartiallyParsedRegex
+makeGroupPiles = error "makeGroupPiles undefined"
+
+-- If it's a group, parses the characters inside the group.
+-- Only wildcards and escapes are allowed.
+innerParseGroup :: MaybeParsed -> MaybeParsed
+innerParseGroup (PartiallyParsedGroup token_tuples Negated) =
+    Parsed (Group 
+        (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
+innerParseGroup (PartiallyParsedGroup token_tuples Unnegated) =
+    Parsed (NegGroup
+        (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
+innerParseGroup other = other
+
 
 parseRepeats :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseRepeats (Bare (c,Star):Parsed token:rest) = (Parsed (Repeated token)):parseRepeats rest

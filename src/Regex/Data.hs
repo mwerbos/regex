@@ -17,8 +17,8 @@ data Edge = T Token | Epsilon deriving (Show, Eq)
 -- A regex token
 data Token =
     Single Char |
-    Group [Char] |
-    NegGroup [Char] |
+    Group [Token] |
+    NegGroup [Token] |
     Or Token Token |
     Repeated Token |
     Wildcard
