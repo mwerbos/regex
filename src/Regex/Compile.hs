@@ -11,6 +11,7 @@ data TokenType =
     Carat |
     Star |
     OtherChar
+  deriving Eq
 
 -- Token is here a token within a Regex string,
 -- not a regular expression token matcher.
@@ -28,7 +29,7 @@ type TokenizedRegex = [(Char, TokenType)]
 -- List is of *regular expression* tokens
 type ParsedRegex = [Token]
 
-data IsNegated = Negated | Unnegated
+data IsNegated = Negated | Unnegated deriving Eq
 
 -- If I were really hardcore, each parsing stage would have its own type.
 -- But I'm not.
@@ -38,6 +39,7 @@ data MaybeParsed =
     -- Should not contain recursive PartiallyParsedGroups.
     -- TODO: Enforce this somehow? By adding another wrapper?
     PartiallyParsedGroup [MaybeParsed] IsNegated
+  deriving Eq
 
 type PartiallyParsedRegex = [MaybeParsed]
 
@@ -93,8 +95,25 @@ maybeNegate (PartiallyParsedGroup ((Bare (_, Carat)):rest) Unnegated) =
 maybeNegate other = other
 
 -- Looks for [ and ] and just puts everything between them in a PartiallyParsedGroup.
+
+data LatestGroup = NoGroup | IncompleteGroup [MaybeParsed] deriving Eq
 makeGroupPiles :: PartiallyParsedRegex -> PartiallyParsedRegex
-makeGroupPiles = error "makeGroupPiles undefined"
+makeGroupPiles tokens = final_parse
+  where final_parse = if last_group == NoGroup
+                      then parsed_regex
+                      else error "Expected ] before end of regex"
+        (last_group, parsed_regex) = foldl grab_chars (NoGroup,[]) tokens
+        grab_chars :: (LatestGroup,PartiallyParsedRegex) -> 
+                          MaybeParsed ->
+                              (LatestGroup,PartiallyParsedRegex)
+        grab_chars (NoGroup,parsed) (Bare (_,LBracket)) = (IncompleteGroup [],parsed)
+        grab_chars (_,parsed) (Bare (_,LBracket)) = error "Encountered [ inside group"
+        grab_chars (NoGroup,_) (Bare (_,RBracket)) = error "Encountered ] outside group"
+        grab_chars (IncompleteGroup group, parsed) (Bare (_,RBracket)) =
+            (NoGroup, parsed ++ [PartiallyParsedGroup group Unnegated])
+        grab_chars (IncompleteGroup group, parsed) next_token =
+            (IncompleteGroup (group ++ [next_token]), parsed)
+        grab_chars (NoGroup, parsed) next_token = (NoGroup, parsed ++ [next_token])
 
 -- If it's a group, parses the characters inside the group.
 -- Only wildcards and escapes are allowed.
