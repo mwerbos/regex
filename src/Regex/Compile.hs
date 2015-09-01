@@ -53,7 +53,11 @@ tokenize :: Regex -> TokenizedRegex
 tokenize (Regex str) = map (\x -> (x, tokenType x)) str
 
 makeAutomaton :: ParsedRegex -> Automaton
-makeAutomaton tokens = Automaton { stateMap = foldl addToken empty tokens }
+makeAutomaton tokens = foldl addToken emptyAutomaton tokens
+
+-- TODO gracefully handle the empty case
+emptyAutomaton :: Automaton
+emptyAutomaton = error "emptyAutomaton undefined"
 
 addToken :: Automaton -> Token -> Automaton
 addToken automaton token = addMiniAutomaton (makeMiniAutomaton token) automaton

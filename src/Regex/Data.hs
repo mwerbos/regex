@@ -1,6 +1,7 @@
 module Regex.Data where
 
-import Data.Graph.Inductive.PatriciaTree
+import Data.Graph.Inductive.PatriciaTree(Gr(..))
+import Data.Graph.Inductive.Graph(Node)
 
 data Regex = Regex String deriving (Show, Eq)
 
