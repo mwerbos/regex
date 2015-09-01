@@ -55,14 +55,14 @@ tokenize (Regex str) = map (\x -> (x, tokenType x)) str
 makeAutomaton :: ParsedRegex -> Automaton
 makeAutomaton tokens = Automaton { stateMap = foldl addToken empty tokens }
 
-addToken :: Gr State Edge -> Token -> Gr State Edge
-addToken graph token = addMiniGraph (makeMiniGraph token) graph
+addToken :: Automaton -> Token -> Automaton
+addToken automaton token = addMiniAutomaton (makeMiniAutomaton token) automaton
 
-addMiniGraph :: Gr State Edge -> Gr State Edge -> Gr State Edge
-addMiniGraph mini_graph graph = error "addMiniGraph undefined"
+addMiniAutomaton :: Automaton -> Automaton -> Automaton
+addMiniAutomaton mini_graph graph = error "addMiniAutomaton undefined"
 
-makeMiniGraph :: Token -> Gr State Edge
-makeMiniGraph = error "makeMiniGraph undefined"
+makeMiniAutomaton :: Token -> Automaton
+makeMiniAutomaton = error "makeMiniAutomaton undefined"
 
 parse :: TokenizedRegex -> ParsedRegex
 parse =

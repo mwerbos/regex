@@ -26,5 +26,6 @@ data Token =
 
 -- A nondeterministic finite automaton
 data Automaton = Automaton {
-  stateMap :: Gr State Edge -- Graph with nodes that are states
+  stateMap :: Gr State Edge, -- Graph with nodes that are states
+  finalState :: Node
 }
