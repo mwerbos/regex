@@ -10,6 +10,7 @@ data TokenType =
     Dot |
     Carat |
     Star |
+    Plus |
     OtherChar
   deriving Eq
 
@@ -22,6 +23,7 @@ tokenType ']' = RBracket
 tokenType '.' = Dot 
 tokenType '^' = Carat
 tokenType '*' = Star
+tokenType '+' = Plus 
 tokenType _ = OtherChar
 
 type TokenizedRegex = [(Char, TokenType)]
@@ -54,7 +56,13 @@ makeAutomaton :: ParsedRegex -> Automaton
 makeAutomaton tokens = Automaton { stateMap = foldl addToken empty tokens }
 
 addToken :: Gr State Edge -> Token -> Gr State Edge
-addToken = error "addToken undefined"
+addToken graph token = addMiniGraph (makeMiniGraph token) graph
+
+addMiniGraph :: Gr State Edge -> Gr State Edge -> Gr State Edge
+addMiniGraph mini_graph graph = error "addMiniGraph undefined"
+
+makeMiniGraph :: Token -> Gr State Edge
+makeMiniGraph = error "makeMiniGraph undefined"
 
 parse :: TokenizedRegex -> ParsedRegex
 parse =
@@ -129,8 +137,11 @@ innerParseGroup other = other
 
 parseRepeats :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseRepeats (Bare (c,Star):Parsed token:rest) = (Parsed (Repeated token)):parseRepeats rest
+parseRepeats (Bare (c,Plus):Parsed token:rest) = (Parsed (Repeated token)):Parsed token:parseRepeats rest
 parseRepeats (Bare (c,Star):_:rest) = error "Unexpected * after unparsed input"
+parseRepeats (Bare (c,Plus):_:rest) = error "Unexpected + after unparsed input"
 parseRepeats (Bare (c,Star):[]) = error "Unexpected * at beginning of input"
+parseRepeats (Bare (c,Plus):[]) = error "Unexpected + at beginning of input"
 parseRepeats (other:rest) = other:parseRepeats rest
 parseRepeats [] = []
 
