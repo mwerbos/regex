@@ -57,10 +57,15 @@ makeAutomaton tokens = foldl addToken emptyAutomaton tokens
 
 -- TODO gracefully handle the empty case
 emptyAutomaton :: Automaton
-emptyAutomaton = error "emptyAutomaton undefined"
+emptyAutomaton = Automaton {
+    stateMap = empty,
+    finalState = -1
+}
 
 addToken :: Automaton -> Token -> Automaton
-addToken automaton token = addMiniAutomaton (makeMiniAutomaton token) automaton
+addToken automaton token
+  | automaton == emptyAutomaton = error "TODO define first token add on empty automaton"
+  | otherwise = addMiniAutomaton (makeMiniAutomaton token) automaton
 
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
 addMiniAutomaton mini_graph graph = error "addMiniAutomaton undefined"

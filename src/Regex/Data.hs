@@ -13,7 +13,7 @@ data State = S Int deriving (Show, Eq, Ord)
 
 -- An edge in the graph can be a token or an epsilon-transition
 -- (a transition requiring 0 characters to match)
-data Edge = T Token | Epsilon deriving (Show, Eq)
+data Edge = T Token | Epsilon deriving (Show, Eq, Ord)
 
 -- A regex token
 data Token =
@@ -23,10 +23,10 @@ data Token =
     Or Token Token |
     Repeated Token |
     Wildcard
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 -- A nondeterministic finite automaton
 data Automaton = Automaton {
   stateMap :: Gr State Edge, -- Graph with nodes that are states
   finalState :: Node
-}
+} deriving Eq
