@@ -1,7 +1,7 @@
 module Regex.Compile where
 
 import Regex.Data
-import Data.Graph.Inductive(empty,Gr(..))
+import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge)
 
 data TokenType =
     Backslash |
@@ -64,14 +64,18 @@ emptyAutomaton = Automaton {
 
 addToken :: Automaton -> Token -> Automaton
 addToken automaton token
-  | automaton == emptyAutomaton = error "TODO define first token add on empty automaton"
+  | automaton == emptyAutomaton = makeMiniAutomaton token
   | otherwise = addMiniAutomaton (makeMiniAutomaton token) automaton
 
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
 addMiniAutomaton mini_graph graph = error "addMiniAutomaton undefined"
 
 makeMiniAutomaton :: Token -> Automaton
-makeMiniAutomaton = error "makeMiniAutomaton undefined"
+makeMiniAutomaton (Single c) = Automaton {
+  stateMap = insEdge (0, 1, T $ Single c) $ insNodes [(0, S 0), (1, S 1)] $ empty,
+  finalState = 1
+}
+makeMiniAutomaton _ = error "makeMiniAutomaton undefined for this token type"
 
 parse :: TokenizedRegex -> ParsedRegex
 parse =
