@@ -25,3 +25,21 @@ relabel one two = fst $ ufold relabelNode (two,next_nodes) two
              rest_nodes)
         reformat_edges next_node = map (\(edge_thing, other_node) -> (other_node, next_node, edge_thing))
         next_nodes = newNodes (length $ labNodes two) one
+
+-- Takes a list of nodes-of-interest from the second graph,
+-- and returns their new indices in the resulting graph.
+relabelAndTranslate :: Gr a b -> (Gr a b,[Node]) -> (Gr a b,[Node])
+relabelAndTranslate one (two,interesting_nodes) =
+    (fst $ ufold relabelNode (two,next_nodes) two,
+     error "node translation not yet implemented")
+  -- TODO: Figure out how to note down whenever one of the nodes of interest is modified,
+  -- and put its new index in the updated list of interesting nodes.
+  where relabelNode :: Context a b -> (Gr a b,[Node]) -> (Gr a b,[Node])
+        relabelNode (in_edges, node, thing, out_edges) (graph,(next_node:rest_nodes)) =
+            (insEdges (reformat_edges next_node in_edges) $
+             insEdges (reformat_edges next_node out_edges) $
+             delNode node $
+             insNode (next_node, thing) graph,
+             rest_nodes)
+        reformat_edges next_node = map (\(edge_thing, other_node) -> (other_node, next_node, edge_thing))
+        next_nodes = newNodes (length $ labNodes two) one
