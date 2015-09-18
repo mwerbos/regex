@@ -70,11 +70,17 @@ addToken automaton token
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
 addMiniAutomaton mini_graph graph = error "addMiniAutomaton undefined"
 
+-- Combines two regexes saying you can see either one of them
+orAutomatons :: Automaton -> Automaton -> Automaton
+orAutomatons = error "orAutomatons is undefined"
+
 makeMiniAutomaton :: Token -> Automaton
 makeMiniAutomaton (Single c) = Automaton {
   stateMap = insEdge (0, 1, T $ Single c) $ insNodes [(0, S 0), (1, S 1)] $ empty,
   finalState = 1
 }
+makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
+makeMiniAutomaton (Group tokens) = foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton tokens
 makeMiniAutomaton _ = error "makeMiniAutomaton undefined for this token type"
 
 parse :: TokenizedRegex -> ParsedRegex

@@ -18,6 +18,7 @@ data Edge = T Token | Epsilon deriving (Show, Eq, Ord)
 -- A regex token
 data Token =
     Single Char |
+    NegChar Char |
     Group [Token] |
     NegGroup [Token] |
     Or Token Token |
