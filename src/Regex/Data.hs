@@ -30,4 +30,4 @@ data Token =
 data Automaton = Automaton {
   stateMap :: Gr State Edge, -- Graph with nodes that are states
   finalState :: Node
-} deriving Eq
+} deriving (Eq,Show)

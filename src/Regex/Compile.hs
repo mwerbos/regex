@@ -2,6 +2,7 @@ module Regex.Compile where
 
 import Regex.Data
 import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge)
+import Debug.Trace (trace) -- TODO remove
 
 data TokenType =
     Backslash |
@@ -12,7 +13,7 @@ data TokenType =
     Star |
     Plus |
     OtherChar
-  deriving Eq
+  deriving (Eq,Show)
 
 -- Token is here a token within a Regex string,
 -- not a regular expression token matcher.
@@ -31,7 +32,7 @@ type TokenizedRegex = [(Char, TokenType)]
 -- List is of *regular expression* tokens
 type ParsedRegex = [Token]
 
-data IsNegated = Negated | Unnegated deriving Eq
+data IsNegated = Negated | Unnegated deriving (Eq,Show)
 
 -- If I were really hardcore, each parsing stage would have its own type.
 -- But I'm not.
@@ -41,13 +42,16 @@ data MaybeParsed =
     -- Should not contain recursive PartiallyParsedGroups.
     -- TODO: Enforce this somehow? By adding another wrapper?
     PartiallyParsedGroup [MaybeParsed] IsNegated
-  deriving Eq
+  deriving (Eq,Show)
 
 type PartiallyParsedRegex = [MaybeParsed]
 
 -- Pre-processes regex into a nondeterministic finite state automaton
 processRegex :: Regex -> Automaton
-processRegex = makeAutomaton . parse . tokenize
+processRegex regex =
+    trace ("parsed regex: " ++ show (parse $ tokenize regex)) $
+    trace ("tokenized regex: " ++ show (tokenize regex)) $
+    (makeAutomaton . parse . tokenize) regex
 
 tokenize :: Regex -> TokenizedRegex
 tokenize (Regex str) = map (\x -> (x, tokenType x)) str
@@ -84,14 +88,17 @@ makeMiniAutomaton (Group tokens) = foldl orAutomatons emptyAutomaton $ map makeM
 makeMiniAutomaton _ = error "makeMiniAutomaton undefined for this token type"
 
 parse :: TokenizedRegex -> ParsedRegex
-parse =
-    forceParsed .
+parse regex =
+    trace ("regex after parsing wildcards: " ++ 
+        show (parseWildcards $ parseEscapes $ makeMaybeParsed regex)) $
+   (forceParsed .
     parseRepeats .
     parseGroups .
     parseLeftovers .
     parseWildcards .
     parseEscapes .
-    makeMaybeParsed
+    makeMaybeParsed)
+    regex
 
 forceParsed :: PartiallyParsedRegex -> ParsedRegex
 forceParsed (Bare (c,t):rest) = error $ "Could not parse char: " ++ [c]
@@ -108,7 +115,7 @@ parseEscapes (Bare (_, Backslash):Bare (c, OtherChar):rest) =
 parseEscapes (Bare (_, Backslash):Bare (c,_):rest) = Parsed (Single c) : parseEscapes rest
 -- This next case shouldn't happen since we parse escapes first
 parseEscapes (Bare (_, Backslash):_:rest) = error "Can't escape token"
-parseEscapes (_:rest) = parseEscapes rest
+parseEscapes (thing:rest) = thing:parseEscapes rest
 parseEscapes [] = []
 
 parseGroups :: PartiallyParsedRegex -> PartiallyParsedRegex
@@ -163,9 +170,6 @@ parseRepeats (Bare (c,Star):[]) = error "Unexpected * at beginning of input"
 parseRepeats (Bare (c,Plus):[]) = error "Unexpected + at beginning of input"
 parseRepeats (other:rest) = other:parseRepeats rest
 parseRepeats [] = []
-
-parseNegations :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseNegations = error "parseNegations undefined"
 
 parseWildcards :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseWildcards = map convertDots

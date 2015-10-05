@@ -8,9 +8,14 @@ import Data.Graph.Inductive.PatriciaTree(Gr(..))
 import Data.Graph.Inductive.Graph(lab,lneighbors,matchAny,labfilter,Node)
 import Data.Maybe(catMaybes)
 
+import Debug.Trace (trace) -- TODO remove
+
 matchExpression :: Regex -> String -> [Interval]
-matchExpression regex string = runAutomaton automaton string
-  where automaton = processRegex regex
+matchExpression (Regex r) string = 
+    trace ("matching on string: '" ++ string ++ "' with regex '" ++ r ++ "'") $
+    trace ("got automaton: " ++ (show automaton)) $
+    runAutomaton automaton string
+  where automaton = processRegex (Regex r) 
 
 runAutomaton :: Automaton -> String -> [Interval]
 runAutomaton automaton string = currentMatches end_state
