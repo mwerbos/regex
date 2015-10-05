@@ -186,7 +186,8 @@ parseLeftovers = map convertChars
         convertChars (Bare (c, RBracket)) = Bare (c, RBracket)
         convertChars (Bare (c, Carat)) = Bare (c, Carat)
         convertChars (Bare (c, Star)) = Bare (c, Star)
+        convertChars (Bare (c, Plus)) = Bare (c, Plus)
         -- Let parsed tokens pass through unchanged
         convertChars (Parsed token) = Parsed token
         -- Expect not to see any other type of character (not strictly necessary)
-        convertChars _ = error "parse error when running parseLeftovers"
+        convertChars other = error ("parse error when running parseLeftovers: " ++ show other)
