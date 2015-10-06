@@ -89,8 +89,6 @@ makeMiniAutomaton _ = error "makeMiniAutomaton undefined for this token type"
 
 parse :: TokenizedRegex -> ParsedRegex
 parse regex =
-    trace ("regex after parsing wildcards: " ++ 
-        show (parseWildcards $ parseEscapes $ makeMaybeParsed regex)) $
    (forceParsed .
     parseRepeats .
     parseGroups .
