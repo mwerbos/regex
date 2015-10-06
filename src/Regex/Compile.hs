@@ -51,8 +51,6 @@ type PartiallyParsedRegex = [MaybeParsed]
 -- Pre-processes regex into a nondeterministic finite state automaton
 processRegex :: Regex -> Automaton
 processRegex regex =
-    trace ("parsed regex: " ++ show (parse $ tokenize regex)) $
-    trace ("tokenized regex: " ++ show (tokenize regex)) $
     (makeAutomaton . parse . tokenize) regex
 
 tokenize :: Regex -> TokenizedRegex
@@ -75,12 +73,14 @@ addToken automaton token
 
 -- Just concatenate the regexes; we want to see A then B.
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
-addMiniAutomaton mini_graph graph = Automaton {
-    stateMap = insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
-    finalState = find_updated_node (finalState mini_graph)
-} where find_updated_node state = fromJust $ M.lookup state new_node_map
+addMiniAutomaton mini_graph graph = trace (show automaton) $ automaton
+  where find_updated_node state = fromJust $ M.lookup state new_node_map
         (combined_graph, new_node_map) =
             relabelAndTranslate (stateMap graph) (stateMap mini_graph, [0, finalState mini_graph])
+        automaton = Automaton {
+          stateMap = insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
+          finalState = find_updated_node (finalState mini_graph)
+        }
 
 -- Combines two regexes saying you can see either one of them
 orAutomatons :: Automaton -> Automaton -> Automaton
