@@ -21,18 +21,16 @@ runAutomaton :: Automaton -> String -> [Interval]
 runAutomaton automaton string = currentMatches end_state
   where end_state = foldl (runAutomatonOnce automaton) initialState string
 
-data PossibleMatch = P { matchState :: State, startIndex :: Int }
+data PossibleMatch = P { matchState :: Node, startIndex :: Int }
 
 data ProcessingState = ProcessingState {
     possibleMatches :: [PossibleMatch],
     currentIndex :: Int,
-    currentMatches :: [Interval],
-    -- TODO: Put this into the automaton!!
-    endState :: State -- End state of the automaton. Probably doesn't belong here.
+    currentMatches :: [Interval]
 }
 
 initialMatch :: PossibleMatch
-initialMatch = P { matchState = S 0, startIndex = 0 }
+initialMatch = P { matchState = 0, startIndex = 0 }
 
 initialState :: ProcessingState
 initialState = ProcessingState {
@@ -42,7 +40,9 @@ initialState = ProcessingState {
 }
 
 runAutomatonOnce :: Automaton -> ProcessingState -> Char -> ProcessingState
-runAutomatonOnce automaton state char = popFinalStates $ incrementIndex (runStatesOnce automaton state char)
+runAutomatonOnce automaton state char =
+    (popFinalStates (finalState automaton)) $
+    incrementIndex (runStatesOnce automaton state char)
         -- First get new states by running the automaton
         -- Then pop any final states onto the intervals list
 
@@ -66,13 +66,10 @@ runEpsilonMoves automaton state = state { possibleMatches = new_possibilities }
 -- Utility for dealing with FGL
 -- Filter for nodes with this label, then filter for certain edges out of it,
 -- then return all of the labels of the nodes at the end of those edges.
-findNeighborsOfType :: Eq a => (b -> Bool) -> a -> Gr a b -> [a]
-findNeighborsOfType edge_pred label graph = labels_of_neighbors filtered_neighbors
-  where labels_of_neighbors filtered_neighbors = catMaybes $ map (lab graph) filtered_neighbors
-        filtered_neighbors = map snd $ filter (\(edge_label,node) -> edge_pred edge_label) neighbors
-        neighbors = lneighbors graph node_for_label
-        ((_,node_for_label,_,_),empty) = matchAny graph_with_only_this_label
-        graph_with_only_this_label = labfilter (==label) graph
+findNeighborsOfType :: (b -> Bool) -> Node -> Gr () b -> [Node]
+findNeighborsOfType edge_pred node graph = filtered_neighbors
+  where filtered_neighbors = map snd $ filter (\(edge_label,node) -> edge_pred edge_label) neighbors
+        neighbors = lneighbors graph node
 
 -- Takes all possible matches and makes them go places based on actual moves
 runNonEpsilonMoves :: Automaton -> ProcessingState -> Char -> ProcessingState
@@ -89,15 +86,15 @@ matches _ Epsilon = False
 matches c (T token) = matchesToken c token
 
 -- Removes all states that are the final state and turns them into matches
-popFinalStates :: ProcessingState -> ProcessingState
-popFinalStates state = state { 
+popFinalStates :: Node -> ProcessingState -> ProcessingState
+popFinalStates final_state state = state { 
     possibleMatches = new_possibilities,
     currentMatches = (currentMatches state) ++ new_matches
 } where new_possibilities = filter (not . isEnd) (possibleMatches state)
         new_matches = map toInterval $ filter isEnd (possibleMatches state)
 
         isEnd :: PossibleMatch -> Bool
-        isEnd p = matchState p == endState state
+        isEnd p = matchState p == final_state
         
         toInterval :: PossibleMatch -> Interval
         toInterval (P {startIndex = i}) = Interval (i, currentIndex state)

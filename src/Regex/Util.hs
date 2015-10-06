@@ -1,4 +1,4 @@
-module Regex.Util (addGraphs) where
+module Regex.Util (relabelAndTranslate) where
 
 import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdges,insNode,delNode,Context(..),Node,labNodes)
 import Data.Graph.Inductive.PatriciaTree (Gr(..))

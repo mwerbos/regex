@@ -1,12 +1,14 @@
 module Regex.Compile where
 
 import Regex.Data
+import Regex.Util
 import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge)
 import Debug.Trace (trace) -- TODO remove
+import qualified Data.Map as M
+import Data.Maybe (fromJust)
 
 data TokenType =
-    Backslash |
-    LBracket |
+    Backslash | LBracket |
     RBracket |
     Dot |
     Carat |
@@ -71,8 +73,14 @@ addToken automaton token
   | automaton == emptyAutomaton = makeMiniAutomaton token
   | otherwise = addMiniAutomaton (makeMiniAutomaton token) automaton
 
+-- Just concatenate the regexes; we want to see A then B.
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
-addMiniAutomaton mini_graph graph = error "addMiniAutomaton undefined"
+addMiniAutomaton mini_graph graph = Automaton {
+    stateMap = insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
+    finalState = find_updated_node (finalState mini_graph)
+} where find_updated_node state = fromJust $ M.lookup state new_node_map
+        (combined_graph, new_node_map) =
+            relabelAndTranslate (stateMap graph) (stateMap mini_graph, [0, finalState mini_graph])
 
 -- Combines two regexes saying you can see either one of them
 orAutomatons :: Automaton -> Automaton -> Automaton
@@ -80,7 +88,7 @@ orAutomatons = error "orAutomatons is undefined"
 
 makeMiniAutomaton :: Token -> Automaton
 makeMiniAutomaton (Single c) = Automaton {
-  stateMap = insEdge (0, 1, T $ Single c) $ insNodes [(0, S 0), (1, S 1)] $ empty,
+  stateMap = insEdge (0, 1, T $ Single c) $ insNodes [(0,()), (1,())] $ empty,
   finalState = 1
 }
 makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
