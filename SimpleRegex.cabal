@@ -66,5 +66,5 @@ library
 test-suite spec
   type: exitcode-stdio-1.0
   hs-source-dirs: test
-  main-is: Test.hs
-  build-depends: SimpleRegex, base >= 4.6, text >=0.11, hspec
+  main-is: Spec.hs
+  build-depends: SimpleRegex, base >= 4.6, text >=0.11, hspec >= 1.3

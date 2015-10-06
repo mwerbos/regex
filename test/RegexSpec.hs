@@ -1,6 +1,6 @@
-module Main where
+module RegexSpec where
 
-import Test.Hspec
+import SpecHelper
 import Regex
 import Control.Exception (evaluate)
 
