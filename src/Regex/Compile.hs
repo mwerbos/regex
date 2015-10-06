@@ -71,14 +71,15 @@ addToken automaton token
   | automaton == emptyAutomaton = makeMiniAutomaton token
   | otherwise = addMiniAutomaton (makeMiniAutomaton token) automaton
 
--- Just concatenate the regexes; we want to see A then B.
+-- Just concatenate the regexes; we want to see 'graph' then 'mini_graph'
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
 addMiniAutomaton mini_graph graph = trace (show automaton) $ automaton
   where find_updated_node state = fromJust $ M.lookup state new_node_map
-        (combined_graph, new_node_map) =
+        (combined_graph, new_node_map) = trace ("finding combined graph") $
             relabelAndTranslate (stateMap graph) (stateMap mini_graph, [0, finalState mini_graph])
         automaton = Automaton {
-          stateMap = insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
+          stateMap = trace (show combined_graph) $
+              insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
           finalState = find_updated_node (finalState mini_graph)
         }
 
