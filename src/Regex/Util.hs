@@ -2,7 +2,7 @@ module Regex.Util (relabelAndTranslate, addGraphsAndTranslate) where
 -- relabelAndTranslate is only exported for testing purposes.
 -- TODO: put it into an Internal module for testing.
 
-import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdge,LEdge,insNode,delNode,Context(..),Node,labNodes,nodes)
+import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdge,insNode,delNode,Context(..),Node,labNodes,nodes)
 import Data.Graph.Inductive.PatriciaTree (Gr(..))
 import Data.List (elem,delete)
 import qualified Data.Map.Strict as M
@@ -66,12 +66,11 @@ relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_re
         partlyRelabeledGraph old_relabel_context
     }
   where fix_all_edges old_graph =
-          foldl fix_edge old_graph in_edges_to_relabel .
-          foldl fix_edge old_graph out_edges_to_relabel
+          foldl fix_edge (foldl fix_edge old_graph in_edges_to_relabel) out_edges_to_relabel
+          
 
-        fix_edge :: Gr a b -> LEdge b -> Gr a b
+        fix_edge :: Gr a b -> (b, Node) -> Gr a b
         fix_edge graph (edge_payload, other_node_in_edge) =
           insEdge (translate_node other_node_in_edge, translate_node node_to_relabel, edge_payload) graph
         
         translate_node node = M.findWithDefault node node (translatedNodes old_relabel_context)
-
