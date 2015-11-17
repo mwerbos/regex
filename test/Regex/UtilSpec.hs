@@ -15,7 +15,7 @@ spec = do
       relabelAndTranslate base_graph graph_to_relabel `shouldBe`
           (mkGraph [(2,()), (3,())]
                    [(2,3,Single 'i')],
-           M.insert 0 2 $ M.empty)
+           M.fromList [(0,2),(1,3)])
   describe "addGraphsAndTranslate" $ do
     it "adds two small graphs" $ do
       let base_graph = mkGraph [(0,()), (1,())] [(0,1,Single 'h')]
@@ -23,7 +23,7 @@ spec = do
       addGraphsAndTranslate base_graph graph_to_relabel `shouldBe`
           (mkGraph [(0,()), (1,()), (2,()), (3,())]
                    [(0,1,Single 'h'), (2,3,Single 'i')],
-           M.insert 0 2 $ M.empty)
+           M.fromList [(0,2), (1,3)])
 
 main :: IO ()
 main = hspec spec
