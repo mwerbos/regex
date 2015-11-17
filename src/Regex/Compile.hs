@@ -5,7 +5,7 @@ import Regex.Util
 import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge)
 import Debug.Trace (trace) -- TODO remove
 import qualified Data.Map as M
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, isJust)
 
 data TokenType =
     Backslash | LBracket |
@@ -74,7 +74,12 @@ addToken automaton token
 -- Just concatenate the regexes; we want to see 'graph' then 'mini_graph'
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
 addMiniAutomaton mini_graph graph = trace (show automaton) $ automaton
-  where find_updated_node state = fromJust $ M.lookup state new_node_map
+  where find_updated_node state = 
+            let maybe_new_node = M.lookup state new_node_map in
+            if isJust maybe_new_node then fromJust maybe_new_node
+            else error ("Could not find state " ++ show state ++ " in map " ++ show new_node_map)
+            fromJust $ M.lookup state new_node_map
+
         (combined_graph, new_node_map) = trace ("finding combined graph") $
             relabelAndTranslate (stateMap graph) (stateMap mini_graph, [0, finalState mini_graph])
         automaton = Automaton {
