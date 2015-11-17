@@ -24,6 +24,15 @@ spec = do
             finalState = 3
           }
       makeAutomaton parsed `shouldBe` simple_automaton
+    it "builds a longer automaton" $ do
+      let parsed = [Single 'f', Single 'o', Single 'x']
+          simple_automaton = Automaton {
+            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,())]
+                               [(0,1,T $ Single 'f'), (1,2,Epsilon), (2,3,T $ Single 'o'),
+                                (3,4,Epsilon), (4,5,T $ Single 'x')],
+            finalState = 5
+          }
+      makeAutomaton parsed `shouldBe` simple_automaton
 
 main :: IO ()
 main = hspec spec
