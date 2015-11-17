@@ -43,6 +43,7 @@ relabel one two = fst $ ufold relabelNode (two,next_nodes) two
 -- and returns their new indices in the resulting graph.
 relabelAndTranslate :: (Show a, Show b) => Gr a b -> (Gr a b,[Node]) -> (Gr a b,M.Map Node Node)
 relabelAndTranslate base_graph (graph_to_relabel, interesting_nodes) =
+  trace "********* running relabelAndTranslate" $
   (relabeled_graph, relabeled_nodes)
   where RelabelContext { partlyRelabeledGraph = relabeled_graph, translatedNodes = relabeled_nodes } =
             ufold relabelNode initial_context graph_to_relabel
@@ -63,7 +64,7 @@ data RelabelContext a b = RelabelContext {
 relabelNode :: (Show a, Show b) => Context a b -> RelabelContext a b -> RelabelContext a b
 relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_relabel)
   old_relabel_context = -- (graph_to_relabel, (next_node:rest_nodes), (old_nodes,new_nodes)) =
-    trace ("relabeling node " ++ show node_to_relabel ++
+    trace ("$$ relabeling node " ++ show node_to_relabel ++
            " in graph " ++ show (partlyRelabeledGraph old_relabel_context)) $
     RelabelContext {
       partlyRelabeledGraph =
@@ -84,11 +85,15 @@ relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_re
                             (remainingNodesToTranslate old_relabel_context,
                             translatedNodes old_relabel_context)
 
-        fix_this_node_edges =
-          insEdges (reformat_edges next_available_node in_edges_to_relabel) .
-          insEdges (reformat_edges next_available_node out_edges_to_relabel) .
-          delNode node_to_relabel .
-          insNode (next_available_node, node_payload)
+        fix_this_node_edges old_graph =
+          let graph_with_new_node = insEdges (reformat_edges next_available_node out_edges_to_relabel) .
+                          insEdges (reformat_edges next_available_node in_edges_to_relabel) .
+                          insNode (next_available_node, node_payload) $ old_graph in
+          let new_graph = delNode node_to_relabel $ graph_with_new_node
+          in trace ("graph before relabeling: " ++ show old_graph ++ 
+                    "\ngraph with new node inserted: " ++ show graph_with_new_node ++
+                    "\ngraph after deleting old node: " ++ show new_graph) $
+             new_graph
 
         try_relabel_nodes :: Node -> Node -> ([Node],M.Map Node Node) -> ([Node],M.Map Node Node)
         try_relabel_nodes node next_node (old_nodes,new_node_map) = 
