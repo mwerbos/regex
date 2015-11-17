@@ -2,7 +2,7 @@ module Regex.Util (relabelAndTranslate, addGraphsAndTranslate) where
 -- relabelAndTranslate is only exported for testing purposes.
 -- TODO: put it into an Internal module for testing.
 
-import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdges,insNode,delNode,Context(..),Node,labNodes)
+import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdges,insNode,delNode,Context(..),Node,labNodes,nodes)
 import Data.Graph.Inductive.PatriciaTree (Gr(..))
 import Data.List (elem,delete)
 import qualified Data.Map.Strict as M
@@ -38,9 +38,9 @@ relabel one two = fst $ ufold relabelNode (two,next_nodes) two
         next_nodes = newNodes (length $ labNodes two) one
 
 -- Relabels the second graph so it's compatible with the first.
--- Also:
--- Takes a list of nodes-of-interest from the second graph,
--- and returns their new indices in the resulting graph.
+-- Also: Returns a map from old node labels in the second graph, to their new labels in the combined graph.
+-- TODO: Make the above line of documentation true (so far it still just takes a list of nodes of interest).
+-- Labels for the first graph stay the same in the combined graph.
 relabelAndTranslate :: (Show a, Show b) => Gr a b -> (Gr a b,[Node]) -> (Gr a b,M.Map Node Node)
 relabelAndTranslate base_graph (graph_to_relabel, interesting_nodes) =
   trace "********* running relabelAndTranslate" $
@@ -60,6 +60,16 @@ data RelabelContext a b = RelabelContext {
   remainingNodesToTranslate :: [Node],
   translatedNodes :: M.Map Node Node
 }
+
+-- Takes a base graph and a graph to extend it with, and returns a map from:
+-- extra_graph nodes -> new labels for those nodes in the combined graph.
+constructNewNodeLabels :: Gr a b -> Gr a b -> M.Map Node Node
+constructNewNodeLabels base_graph extra_graph =
+  foldl add_tuple_to_map M.empty zipped_translation_tuples
+  where add_tuple_to_map :: M.Map Node Node -> (Node, Node) -> M.Map Node Node
+        add_tuple_to_map map_ (old_label, new_label) = M.insert old_label new_label map_
+        zipped_translation_tuples = zip old_node_labels (newNodes (length $ old_node_labels) base_graph)
+        old_node_labels = nodes extra_graph
 
 relabelNode :: (Show a, Show b) => Context a b -> RelabelContext a b -> RelabelContext a b
 relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_relabel)
