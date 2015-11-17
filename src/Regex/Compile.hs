@@ -78,12 +78,11 @@ addMiniAutomaton mini_graph graph = trace (show automaton) $ automaton
             let maybe_new_node = M.lookup state new_node_map in
             if isJust maybe_new_node then fromJust maybe_new_node
             else error ("Could not find state " ++ show state ++ " in map " ++ show new_node_map)
-            fromJust $ M.lookup state new_node_map
 
         (combined_graph, new_node_map) = trace ("finding combined graph") $
-            relabelAndTranslate (stateMap graph) (stateMap mini_graph, [0, finalState mini_graph])
+            addGraphsAndTranslate (stateMap graph) (stateMap mini_graph, [0, finalState mini_graph])
         automaton = Automaton {
-          stateMap = trace (show combined_graph) $
+          stateMap = trace ("Combined graph is: " ++ show combined_graph) $
               insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
           finalState = find_updated_node (finalState mini_graph)
         }

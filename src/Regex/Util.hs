@@ -1,4 +1,6 @@
-module Regex.Util (relabelAndTranslate) where
+module Regex.Util (relabelAndTranslate, addGraphsAndTranslate) where
+-- relabelAndTranslate is only exported for testing purposes.
+-- TODO: put it into an Internal module for testing.
 
 import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdges,insNode,delNode,Context(..),Node,labNodes)
 import Data.Graph.Inductive.PatriciaTree (Gr(..))
@@ -8,6 +10,12 @@ import Debug.Trace (trace) -- TODO remove
 
 addGraphs :: Gr a b -> Gr a b -> Gr a b
 addGraphs one two = smoosh one (relabel one two)
+
+-- Takes nodes of interest from the 'extra' graph and translates their new labels.
+addGraphsAndTranslate :: (Show a, Show b) => Gr a b -> (Gr a b,[Node]) -> (Gr a b, M.Map Node Node)
+addGraphsAndTranslate base_graph (extra_graph, nodes_of_interest) =
+    (smoosh base_graph new_graph, new_node_map)
+  where (new_graph, new_node_map) = relabelAndTranslate base_graph (extra_graph, nodes_of_interest)
 
 -- Puts two graphs together and doesn't <s>afraid of anything</s>
 -- care whether they have overlapping labels
