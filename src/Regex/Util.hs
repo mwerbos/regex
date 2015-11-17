@@ -65,7 +65,9 @@ relabelNode :: (Show a, Show b) => Context a b -> RelabelContext a b -> RelabelC
 relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_relabel)
   old_relabel_context = -- (graph_to_relabel, (next_node:rest_nodes), (old_nodes,new_nodes)) =
     trace ("$$ relabeling node " ++ show node_to_relabel ++
-           " in graph " ++ show (partlyRelabeledGraph old_relabel_context)) $
+           " in graph " ++ show (partlyRelabeledGraph old_relabel_context) ++
+           " with in edges " ++ show in_edges_to_relabel ++
+           " and out edges " ++ show out_edges_to_relabel) $
     RelabelContext {
       partlyRelabeledGraph =
         if this_node_is_interesting
@@ -88,7 +90,11 @@ relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_re
         fix_this_node_edges old_graph =
           delNode node_to_relabel $ add_edges $ insNode (next_available_node, node_payload) $ old_graph
 
-        add_edges = insEdges (reformat_edges next_available_node out_edges_to_relabel) .
+        -- TODO: This DOES NOT WORK. This is because the in_edges and out_edges that we get from
+        -- the Context are NOT, in fact, exhaustive. I don't know why. Need to fix this issue.
+        add_edges = trace ("adding reformatted out edges: " ++ show (reformat_edges next_available_node out_edges_to_relabel)) $
+                    trace ("adding reformatted in edges: " ++ show (reformat_edges next_available_node in_edges_to_relabel)) $
+                    insEdges (reformat_edges next_available_node out_edges_to_relabel) .
                     insEdges (reformat_edges next_available_node in_edges_to_relabel)
 
         try_relabel_nodes :: Node -> Node -> ([Node],M.Map Node Node) -> ([Node],M.Map Node Node)
@@ -103,4 +109,7 @@ relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_re
         next_available_node = head $ newNodeLabels old_relabel_context
 
         reformat_edges next_available_node =
-            map (\(edge_payload, other_node_in_edge) -> (other_node_in_edge, next_available_node, edge_payload))
+            map (\(edge_payload, other_node_in_edge) -> 
+                      trace ("turning " ++ show (edge_payload, other_node_in_edge) ++
+                             " into " ++ show (other_node_in_edge, next_available_node, edge_payload)) $
+                      (other_node_in_edge, next_available_node, edge_payload))
