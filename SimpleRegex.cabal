@@ -49,6 +49,7 @@ library
   hs-source-dirs: src
 
   exposed-modules: Regex
+                   Regex.RunAutomaton
                    Regex.Data
                    Regex.Compile
                    Regex.Match
