@@ -86,14 +86,10 @@ relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_re
                             translatedNodes old_relabel_context)
 
         fix_this_node_edges old_graph =
-          let graph_with_new_node = insEdges (reformat_edges next_available_node out_edges_to_relabel) .
-                          insEdges (reformat_edges next_available_node in_edges_to_relabel) .
-                          insNode (next_available_node, node_payload) $ old_graph in
-          let new_graph = delNode node_to_relabel $ graph_with_new_node
-          in trace ("graph before relabeling: " ++ show old_graph ++ 
-                    "\ngraph with new node inserted: " ++ show graph_with_new_node ++
-                    "\ngraph after deleting old node: " ++ show new_graph) $
-             new_graph
+          delNode node_to_relabel $ add_edges $ insNode (next_available_node, node_payload) $ old_graph
+
+        add_edges = insEdges (reformat_edges next_available_node out_edges_to_relabel) .
+                    insEdges (reformat_edges next_available_node in_edges_to_relabel)
 
         try_relabel_nodes :: Node -> Node -> ([Node],M.Map Node Node) -> ([Node],M.Map Node Node)
         try_relabel_nodes node next_node (old_nodes,new_node_map) = 
