@@ -59,10 +59,9 @@ relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_re
            " in graph " ++ show (partlyRelabeledGraph old_relabel_context)) $
     RelabelContext {
       partlyRelabeledGraph =
-        insEdges (reformat_edges next_available_node in_edges_to_relabel) $
-        insEdges (reformat_edges next_available_node out_edges_to_relabel) $
-        delNode node_to_relabel $
-        insNode (next_available_node, node_payload) $ partlyRelabeledGraph old_relabel_context,
+        if this_node_is_interesting
+        then fix_this_node_edges $ partlyRelabeledGraph old_relabel_context
+        else partlyRelabeledGraph old_relabel_context,
 
       -- By construction of the fold, this should never crash.
       newNodeLabels = new_available_nodes,
@@ -77,11 +76,19 @@ relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_re
                             (remainingNodesToTranslate old_relabel_context,
                             translatedNodes old_relabel_context)
 
+        fix_this_node_edges =
+          insEdges (reformat_edges next_available_node in_edges_to_relabel) .
+          insEdges (reformat_edges next_available_node out_edges_to_relabel) .
+          delNode node_to_relabel .
+          insNode (next_available_node, node_payload)
+
         try_relabel_nodes :: Node -> Node -> ([Node],M.Map Node Node) -> ([Node],M.Map Node Node)
         try_relabel_nodes node next_node (old_nodes,new_node_map) = 
-            if node `elem` old_nodes
+            if this_node_is_interesting
             then (delete node old_nodes, M.insert node next_node new_node_map)
             else (old_nodes,new_node_map)
+
+        this_node_is_interesting = node_to_relabel `elem` (remainingNodesToTranslate old_relabel_context)
 
         -- By construction of the fold, this should never crash.
         next_available_node = head $ newNodeLabels old_relabel_context
