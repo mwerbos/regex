@@ -66,11 +66,16 @@ relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_re
         partlyRelabeledGraph old_relabel_context
     }
   where fix_all_edges old_graph =
-          foldl fix_edge (foldl fix_edge old_graph in_edges_to_relabel) out_edges_to_relabel
+          foldl fix_out_edge (foldl fix_in_edge old_graph in_edges_to_relabel) out_edges_to_relabel
           
-
-        fix_edge :: Gr a b -> (b, Node) -> Gr a b
-        fix_edge graph (edge_payload, other_node_in_edge) =
+        -- Edges that are into 'node_to_relabel'
+        fix_in_edge :: Gr a b -> (b, Node) -> Gr a b
+        fix_in_edge graph (edge_payload, other_node_in_edge) =
           insEdge (translate_node other_node_in_edge, translate_node node_to_relabel, edge_payload) graph
+
+        -- Edges that are outward from 'node_to_relabel'
+        fix_out_edge :: Gr a b -> (b, Node) -> Gr a b
+        fix_out_edge graph (edge_payload, other_node_in_edge) =
+          insEdge (translate_node node_to_relabel, translate_node other_node_in_edge, edge_payload) graph
         
         translate_node node = M.findWithDefault node node (translatedNodes old_relabel_context)
