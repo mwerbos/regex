@@ -1,8 +1,8 @@
 module Regex (Regex(..), matchExpression, Interval(..)) where
 
 import Regex.Data
-import Regex.RunAutomaton
-import Regex.Compile
+import Regex.RunAutomaton (runAutomaton)
+import Regex.Compile (processRegex)
 
 import Debug.Trace (trace) -- TODO remove
 

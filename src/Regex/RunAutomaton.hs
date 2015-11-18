@@ -1,4 +1,4 @@
-module Regex.RunAutomaton (runAutomaton) where
+module Regex.RunAutomaton where
 
 import Regex.Data
 import Regex.Match
