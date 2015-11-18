@@ -103,7 +103,7 @@ spec = do
         let text = "Duke of Aragon"
             regex = Regex "[abc^]"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "unexpected ^ not at the beginning of a character class"
+            errorCall "Could not parse char: ^"
 
     context "matching with negated character classes" $ do
       it "does it" $ do
@@ -138,13 +138,13 @@ spec = do
         let text = "i am dogogogo"
             regex = Regex "d[og+]g"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "can't use + character inside a character class"
+            errorCall "Could not parse char: +"
 
       it "disallows two + in a row" $ do
         let text = "i am dooog"
             regex = Regex "do++g"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "unexpected + after unparsed input"
+            errorCall "Unexpected + after unparsed input"
 
       it "doesn't match 0 instances of repeated class" $ do
         let text = "i am dg"
