@@ -11,13 +11,13 @@ runAutomaton :: Automaton -> String -> [Interval]
 runAutomaton automaton string = currentMatches end_state
   where end_state = foldl (runAutomatonOnce automaton) initialState string
 
-data PossibleMatch = P { matchState :: Node, startIndex :: Int }
+data PossibleMatch = P { matchState :: Node, startIndex :: Int } deriving (Show,Eq)
 
 data ProcessingState = ProcessingState {
     possibleMatches :: [PossibleMatch],
     currentIndex :: Int,
     currentMatches :: [Interval]
-}
+} deriving (Show,Eq)
 
 initialMatch :: PossibleMatch
 initialMatch = P { matchState = 0, startIndex = 0 }
