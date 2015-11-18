@@ -33,10 +33,17 @@ initialState = ProcessingState {
 
 runAutomatonOnce :: Automaton -> ProcessingState -> Char -> ProcessingState
 runAutomatonOnce automaton state char =
+    addInitialState $
     (popFinalStates (finalState automaton)) $
     incrementIndex (runStatesOnce automaton state char)
         -- First get new states by running the automaton
         -- Then pop any final states onto the intervals list
+
+addInitialState :: ProcessingState -> ProcessingState
+addInitialState state = state {
+  possibleMatches = P { matchState = 0, startIndex = currentIndex state } :
+                      possibleMatches state
+}
 
 incrementIndex :: ProcessingState -> ProcessingState
 incrementIndex state = state { currentIndex = (currentIndex state) + 1 }
