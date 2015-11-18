@@ -74,7 +74,11 @@ addToken automaton token
 
 -- Just concatenate the regexes; we want to see 'graph' then 'mini_graph'
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
-addMiniAutomaton mini_graph graph = automaton
+addMiniAutomaton mini_graph graph = Automaton {
+    stateMap = 
+      insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
+      finalState = find_updated_node (finalState mini_graph)
+    }
   where find_updated_node state = 
             let maybe_new_node = M.lookup state new_node_map in
             if isJust maybe_new_node then fromJust maybe_new_node
@@ -82,11 +86,6 @@ addMiniAutomaton mini_graph graph = automaton
 
         (combined_graph, new_node_map) = 
             addGraphsAndTranslate (stateMap graph) (stateMap mini_graph)
-        automaton = Automaton {
-          stateMap = 
-              insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
-          finalState = find_updated_node (finalState mini_graph)
-        }
 
 -- Combines two regexes saying you can see either one of them
 orAutomatons :: Automaton -> Automaton -> Automaton
