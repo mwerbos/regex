@@ -2,7 +2,7 @@ module Regex.Compile where
 
 import Regex.Data
 import Regex.Util
-import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge)
+import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge,insEdges,mkGraph)
 import qualified Data.Map as M
 import Data.Maybe (fromJust, isJust)
 
@@ -88,7 +88,32 @@ addMiniAutomaton mini_graph graph = automaton
 
 -- Combines two regexes saying you can see either one of them
 orAutomatons :: Automaton -> Automaton -> Automaton
-orAutomatons = error "orAutomatons is undefined"
+orAutomatons first_aut second_aut = Automaton {
+    stateMap = add_epsilon_transitions overall_graph,
+    finalState = translate_base_graph_node 1
+  }
+  where (overall_graph, translated_nodes) = addGraphsAndTranslate two_graphs_combined base_graph
+        -- base_graph: just the beginning and end nodes we add to A and B
+        base_graph = mkGraph [(0,()), (1,())] []
+        (two_graphs_combined, second_graph_translated) = addGraphsAndTranslate first_graph second_graph
+        first_graph = stateMap first_aut
+        second_graph = stateMap second_aut
+        translate_base_graph_node node = M.findWithDefault node node (translated_nodes)
+        -- No translation needed for nodes from the first graph, since it gets to be the
+        -- 'base graph' in both additions.
+        translate_first_graph_node = id
+        translate_second_graph_node node = 
+          let first_translation = M.findWithDefault node node second_graph_translated in
+          M.findWithDefault first_translation first_translation (translated_nodes)
+        
+        add_epsilon_transitions overall_graph = insEdges epsilon_edges overall_graph
+        epsilon_edges = [(translate_base_graph_node 0, translate_first_graph_node 0, Epsilon),
+                         (translate_base_graph_node 0, translate_second_graph_node 0, Epsilon),
+                         (translate_first_graph_node $ finalState first_aut,
+                              translate_base_graph_node 1, Epsilon),
+                         (translate_second_graph_node $ finalState second_aut,
+                              translate_base_graph_node 1, Epsilon)]
+        
 
 makeMiniAutomaton :: Token -> Automaton
 makeMiniAutomaton (Single c) = Automaton {
