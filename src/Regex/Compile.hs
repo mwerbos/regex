@@ -95,9 +95,20 @@ makeMiniAutomaton (Single c) = Automaton {
   stateMap = insEdge (0, 1, T $ Single c) $ insNodes [(0,()), (1,())] $ empty,
   finalState = 1
 }
-makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
+makeMiniAutomaton (NegChar c) = Automaton {
+  stateMap = insEdge (0, 1, T $ NegChar c) $ insNodes [(0,()), (1,())] $ empty,
+  finalState = 1
+}
 makeMiniAutomaton (Group tokens) = foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton tokens
-makeMiniAutomaton _ = error "makeMiniAutomaton undefined for this token type"
+makeMiniAutomaton (NegGroup tokens) = 
+  foldl orAutomatons emptyAutomaton $ map (makeMiniAutomaton . negate) tokens
+  where negate (Single c) = NegChar c
+makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
+makeMiniAutomaton (Repeated token) = error "makeMiniAutomaton not yet defined for repeated tokens"
+makeMiniAutomaton Wildcard = Automaton {
+  stateMap = insEdge (0, 1, T $ Wildcard) $ insNodes [(0,()), (1,())] $ empty,
+  finalState = 1
+}
 
 parse :: TokenizedRegex -> ParsedRegex
 parse regex =
