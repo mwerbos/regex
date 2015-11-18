@@ -2,7 +2,7 @@ module Regex.Compile where
 
 import Regex.Data
 import Regex.Util
-import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge,insEdges,mkGraph)
+import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge,insEdges,mkGraph,Node)
 import qualified Data.Map as M
 import Data.Maybe (fromJust, isJust)
 
@@ -92,19 +92,11 @@ orAutomatons first_aut second_aut = Automaton {
     stateMap = add_epsilon_transitions overall_graph,
     finalState = translate_base_graph_node 1
   }
-  where (overall_graph, translated_nodes) = addGraphsAndTranslate base_graph two_graphs_combined
+  where (overall_graph, (translate_base_graph_node, translate_first_graph_node, translate_second_graph_node)) =
+            combineThreeGraphs (base_graph, stateMap first_aut, stateMap second_aut)
         -- base_graph: just the beginning and end nodes we add to A and B
         base_graph = mkGraph [(0,()), (1,())] []
-        (two_graphs_combined, second_graph_translated) = addGraphsAndTranslate first_graph second_graph
-        first_graph = stateMap first_aut
-        second_graph = stateMap second_aut
         -- No translation needed for nodes from the base graph
-        translate_base_graph_node node = node 
-        translate_first_graph_node node = M.findWithDefault node node translated_nodes
-        translate_second_graph_node node = 
-          let first_translation = M.findWithDefault node node second_graph_translated in
-          M.findWithDefault first_translation first_translation (translated_nodes)
-        
         add_epsilon_transitions overall_graph = insEdges epsilon_edges overall_graph
         epsilon_edges = [(translate_base_graph_node 0, translate_first_graph_node 0, Epsilon),
                          (translate_base_graph_node 0, translate_second_graph_node 0, Epsilon),
@@ -112,6 +104,19 @@ orAutomatons first_aut second_aut = Automaton {
                               translate_base_graph_node 1, Epsilon),
                          (translate_second_graph_node $ finalState second_aut,
                               translate_base_graph_node 1, Epsilon)]
+
+-- Combines three graphs and returns a translation function from each graph to the combined graph.
+combineThreeGraphs :: (Show a, Show b) =>
+    (Gr a b, Gr a b, Gr a b) -> (Gr a b, (Node -> Node, Node -> Node, Node -> Node))
+combineThreeGraphs (one, two, three) =
+    (overall_graph, (translate_first_node, translate_second_node, translate_third_node))
+  where (overall_graph, translated_two_and_three) = addGraphsAndTranslate one two_and_three
+        (two_and_three, third_graph_translated) = addGraphsAndTranslate two three
+        translate_first_node node = node 
+        translate_second_node node = M.findWithDefault node node translated_two_and_three
+        translate_third_node node = 
+          let first_translation = M.findWithDefault node node third_graph_translated in
+          M.findWithDefault first_translation first_translation translated_two_and_three
         
 
 makeMiniAutomaton :: Token -> Automaton
