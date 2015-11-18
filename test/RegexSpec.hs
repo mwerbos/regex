@@ -20,11 +20,11 @@ spec = do
 
         matchExpression regex text `shouldBe` [Interval (12,15), Interval (28,31)]
 
-      it "finds non-overlapping matches in order" $ do
-        let text = "ababababa"
+      it "finds overlapping matches in order" $ do
+        let text = "ababa"
             regex = Regex "aba"
 
-        matchExpression regex text `shouldBe` [Interval (0,3), Interval (4,7)]
+        matchExpression regex text `shouldBe` [Interval (0,3), Interval (2,5)]
 
       it "successfully matches an expression at the end of a string" $ do
         let text = "the fox"

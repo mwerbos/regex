@@ -27,7 +27,8 @@ spec = do
     it "moves to the next state on seeing the right character" $ do
       runAutomatonOnce simple_automaton initialState 'f' `shouldBe`
           ProcessingState {
-            possibleMatches = [P {matchState = 1, startIndex = 0 }],
+            possibleMatches = [P {matchState = 0, startIndex = 1 },
+                               P {matchState = 1, startIndex = 0 }],
             currentIndex = 1,
             currentMatches = []
           }
@@ -39,13 +40,14 @@ spec = do
           }
       runAutomatonOnce simple_automaton almostEndState 'x' `shouldBe`
           ProcessingState {
-            possibleMatches = [],
+            possibleMatches = [P {matchState = 0, startIndex = 2 }],
             currentIndex = 2,
             currentMatches = [Interval (0, 2)]
           }
     it "does not move on after seeing a wrong character" $ do
       runAutomatonOnce simple_automaton initialState 'r' `shouldBe`
-          initialState { possibleMatches = [], currentIndex = 1 }
+          initialState { possibleMatches = [P {matchState = 0, startIndex = 1 }],
+                         currentIndex = 1 }
 
   describe "runStatesOnce" $ do
     it "runs a small automaton on a single character" $ do
