@@ -6,6 +6,8 @@ import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge,insEdges,mkGraph,Node)
 import qualified Data.Map as M
 import Data.Maybe (fromJust, isJust)
 
+import Debug.Trace (trace) -- TODO remove
+
 data TokenType =
     Backslash | LBracket |
     RBracket |
@@ -88,6 +90,8 @@ addMiniAutomaton mini_graph graph = automaton
 
 -- Combines two regexes saying you can see either one of them
 orAutomatons :: Automaton -> Automaton -> Automaton
+orAutomatons automaton emptyAutomaton = automaton
+orAutomatons emptyAutomaton automaton = automaton
 orAutomatons first_aut second_aut = Automaton {
     stateMap = add_epsilon_transitions overall_graph,
     finalState = translate_base_graph_node 1
@@ -97,7 +101,10 @@ orAutomatons first_aut second_aut = Automaton {
         -- base_graph: just the beginning and end nodes we add to A and B
         base_graph = mkGraph [(0,()), (1,())] []
         -- No translation needed for nodes from the base graph
-        add_epsilon_transitions overall_graph = insEdges epsilon_edges overall_graph
+        add_epsilon_transitions overall_graph = 
+            trace ("adding epsilon transitions: " ++ show epsilon_edges) $
+            trace ("final state for first automaton: " ++ show (finalState first_aut)) $
+            insEdges epsilon_edges overall_graph
         epsilon_edges = [(translate_base_graph_node 0, translate_first_graph_node 0, Epsilon),
                          (translate_base_graph_node 0, translate_second_graph_node 0, Epsilon),
                          (translate_first_graph_node $ finalState first_aut,
