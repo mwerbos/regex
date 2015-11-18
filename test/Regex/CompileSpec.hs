@@ -33,6 +33,23 @@ spec = do
             finalState = 5
           }
       makeAutomaton parsed `shouldBe` simple_automaton
+  describe "orAutomaton" $ do
+    it "combines two simple automatons" $ do
+      let first = Automaton {
+            stateMap = mkGraph [(0,()), (1,())] [(0,1,T $ Single 'h')],
+            finalState = 1
+          }
+          second = Automaton {
+            stateMap = mkGraph [(0,()), (1,())] [(0,1,T $ Single 'i')],
+            finalState = 1
+          }
+      orAutomatons first second `shouldBe` Automaton {
+            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,())]
+                               [(0,2,Epsilon), (0,4,Epsilon),
+                                (2,3,T $ Single 'h'), (4,5,T $ Single 'i'),
+                                (3,1,Epsilon), (5,1,Epsilon)],
+            finalState = 1
+          }
 
 main :: IO ()
 main = hspec spec

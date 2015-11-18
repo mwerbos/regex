@@ -92,16 +92,15 @@ orAutomatons first_aut second_aut = Automaton {
     stateMap = add_epsilon_transitions overall_graph,
     finalState = translate_base_graph_node 1
   }
-  where (overall_graph, translated_nodes) = addGraphsAndTranslate two_graphs_combined base_graph
+  where (overall_graph, translated_nodes) = addGraphsAndTranslate base_graph two_graphs_combined
         -- base_graph: just the beginning and end nodes we add to A and B
         base_graph = mkGraph [(0,()), (1,())] []
         (two_graphs_combined, second_graph_translated) = addGraphsAndTranslate first_graph second_graph
         first_graph = stateMap first_aut
         second_graph = stateMap second_aut
-        translate_base_graph_node node = M.findWithDefault node node (translated_nodes)
-        -- No translation needed for nodes from the first graph, since it gets to be the
-        -- 'base graph' in both additions.
-        translate_first_graph_node = id
+        -- No translation needed for nodes from the base graph
+        translate_base_graph_node node = node 
+        translate_first_graph_node node = M.findWithDefault node node translated_nodes
         translate_second_graph_node node = 
           let first_translation = M.findWithDefault node node second_graph_translated in
           M.findWithDefault first_translation first_translation (translated_nodes)
