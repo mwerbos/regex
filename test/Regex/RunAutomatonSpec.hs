@@ -42,6 +42,7 @@ spec = do
     it "does not move on after seeing a wrong character" $ do
       runStatesOnce simple_automaton initialState 'r' `shouldBe`
           initialState { possibleMatches = [] }
+
   describe "runNonEpsilonMoves" $ do
     it "runs a small automaton on a single character" $ do
       runNonEpsilonMoves simple_automaton initialState 'f' `shouldBe`

@@ -49,7 +49,8 @@ runStatesOnce aut st c = runNonEpsilonMoves aut (runEpsilonMoves aut st) c
 -- via only epsilon moves.
 runEpsilonMoves :: Automaton -> ProcessingState -> ProcessingState
 runEpsilonMoves automaton state = state { possibleMatches = new_possibilities }
-  where new_possibilities = concat $ map getEpsilonFriends (possibleMatches state)
+  where new_possibilities = concat 
+            (possibleMatches state : map getEpsilonFriends (possibleMatches state))
         getEpsilonFriends :: PossibleMatch -> [PossibleMatch]
         getEpsilonFriends (P {matchState = s, startIndex = i}) =
             map (\new_state -> P {matchState = new_state, startIndex = i}) $
