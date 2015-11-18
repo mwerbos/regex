@@ -1,7 +1,7 @@
 module Regex.RunAutomaton where
 
 import Regex.Data
-import Regex.Match
+import Regex.Match (matchesToken)
 
 import Data.Graph.Inductive.PatriciaTree(Gr(..))
 import Data.Graph.Inductive.Graph(lab,lneighbors,matchAny,labfilter,Node)
