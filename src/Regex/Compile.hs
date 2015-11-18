@@ -76,6 +76,7 @@ addToken automaton token
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
 addMiniAutomaton mini_graph graph = Automaton {
     stateMap = 
+      trace ("adding " ++ show graph ++ " and " ++ show mini_graph ++ ", got " ++ show combined_graph) $
       insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
       finalState = find_updated_node (finalState mini_graph)
     }
