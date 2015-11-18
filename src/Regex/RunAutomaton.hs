@@ -7,6 +7,8 @@ import Data.Graph.Inductive.PatriciaTree(Gr(..))
 import Data.Graph.Inductive.Graph(lab,lneighbors,matchAny,labfilter,Node)
 import Data.Maybe(catMaybes)
 
+import Debug.Trace (trace) -- TODO remove
+
 runAutomaton :: Automaton -> String -> [Interval]
 runAutomaton automaton string = currentMatches end_state
   where end_state = foldl (runAutomatonOnce automaton) initialState string
@@ -72,7 +74,7 @@ runNonEpsilonMoves automaton state char =
               findNeighborsOfType (matches char) s (stateMap automaton)
 
 matches :: Char -> Edge -> Bool
-matches _ Epsilon = False
+matches _ Epsilon = trace "matching against an epsilon move" False
 matches c (T token) = matchesToken c token
 
 -- Removes all states that are the final state and turns them into matches

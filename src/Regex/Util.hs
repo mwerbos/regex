@@ -6,7 +6,6 @@ import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdge,insNode,delNod
 import Data.Graph.Inductive.PatriciaTree (Gr(..))
 import Data.List (elem,delete)
 import qualified Data.Map.Strict as M
-import Debug.Trace (trace) -- TODO remove
 
 -- Takes nodes of interest from the 'extra' graph and translates their new labels.
 addGraphsAndTranslate :: (Show a, Show b) => Gr a b -> Gr a b -> (Gr a b, M.Map Node Node)
@@ -26,7 +25,6 @@ smoosh one two = buildGr (getContexts one ++ getContexts two)
 -- Labels for the first graph stay the same in the combined graph.
 relabelAndTranslate :: (Show a, Show b) => Gr a b -> Gr a b -> (Gr a b,M.Map Node Node)
 relabelAndTranslate base_graph graph_to_relabel =
-  trace "********* running relabelAndTranslate" $
   (relabeled_graph, relabeled_nodes)
   where RelabelContext { partlyRelabeledGraph = relabeled_graph, translatedNodes = relabeled_nodes } =
             ufold relabelNode initial_context graph_to_relabel
@@ -52,10 +50,6 @@ constructNewNodeLabels base_graph extra_graph =
 relabelNode :: (Show a, Show b) => Context a b -> RelabelContext a b -> RelabelContext a b
 relabelNode (in_edges_to_relabel, node_to_relabel, node_payload, out_edges_to_relabel)
   old_relabel_context = -- (graph_to_relabel, (next_node:rest_nodes), (old_nodes,new_nodes)) =
-    trace ("$$ relabeling node " ++ show node_to_relabel ++
-           " in graph " ++ show (partlyRelabeledGraph old_relabel_context) ++
-           " with in edges " ++ show in_edges_to_relabel ++
-           " and out edges " ++ show out_edges_to_relabel) $
     old_relabel_context {
       -- Does some extra work if we don't need to relabel the node
       -- (deletes and reinserts it)
