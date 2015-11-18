@@ -105,6 +105,10 @@ makeMiniAutomaton (NegGroup tokens) =
   where negate (Single c) = NegChar c
 makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
 makeMiniAutomaton (Repeated token) = error "makeMiniAutomaton not yet defined for repeated tokens"
+-- TODO: Think about having a smaller "SimpleToken" type that encompasses *just*
+-- the token types that can be placed on edges (Char, NegChar, Wildcard),
+-- and think about how Wildcard and NegChar affect matchesToken and whether I need to think
+-- of them as match *subsets*.
 makeMiniAutomaton Wildcard = Automaton {
   stateMap = insEdge (0, 1, T $ Wildcard) $ insNodes [(0,()), (1,())] $ empty,
   finalState = 1
