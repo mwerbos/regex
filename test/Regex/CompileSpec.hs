@@ -50,6 +50,20 @@ spec = do
                                 (3,1,Epsilon), (5,1,Epsilon)],
             finalState = 1
           }
+  describe "combineThreeGraphs" $ do
+    it "combines three graphs correctly" $ do
+      let first = mkGraph [(0,()), (1,())] [(0,1,T $ Single 'h')]
+          second = mkGraph [(0,()), (1,())] [(0,1,T $ Single 'i')]
+          third = mkGraph [(0,()), (1,())] [(0,1,T $ Single 'd')]
+          (combined, (fn1, fn2, fn3)) = combineThreeGraphs (first, second, third)
+      combined `shouldBe` mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,())]
+                                  [(0,1,T $ Single 'h'), (2,3,T $ Single 'i'), (4,5,T $ Single 'd')]
+      fn1 0 `shouldBe` 0
+      fn1 1 `shouldBe` 1
+      fn2 0 `shouldBe` 2
+      fn2 1 `shouldBe` 3
+      fn3 0 `shouldBe` 4
+      fn3 1 `shouldBe` 5
 
 main :: IO ()
 main = hspec spec
