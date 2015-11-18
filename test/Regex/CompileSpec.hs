@@ -15,6 +15,17 @@ spec = do
     it "parses a simple expression" $ do
       let tokenized = [('f', OtherChar), ('o', OtherChar), ('x', OtherChar)]
       parse tokenized `shouldBe` [Single 'f', Single 'o', Single 'x']
+  describe "makeMiniAutomaton" $ do
+    it "makes a mini automaton with a character class" $ do
+      let token = Group [Single 'y', Single 'd']
+          simple_automaton = Automaton {
+            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,())]
+                               [(0,1,Epsilon), (0,3,Epsilon),
+                                (1,2,T $ Single 'y'), (3,4,T $ Single 'd'),
+                                (2,5,Epsilon), (4,5,Epsilon)],
+            finalState = 5
+          }
+      makeMiniAutomaton token `shouldBe` simple_automaton
   describe "build automaton" $ do
     it "builds a simple automaton" $ do
       let parsed = [Single 'h', Single 'i']
