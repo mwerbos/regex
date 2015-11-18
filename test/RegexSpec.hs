@@ -73,31 +73,31 @@ spec = do
         let text = "I am [Duke of Aragon]."
             regex = Regex "[\\]\\["
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "String unexpectedly terminated"
+            errorCall "Expected ] before end of regex"
 
       it "fails on an unfinished escaped character" $ do
         let text = "I am [Duke of Aragon.\\"
             regex = Regex "n.\\"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "String unexpectedly terminated"
+            errorCall "parse error when running parseLeftovers: Bare ('\\',Backslash)"
 
       it "fails on a wrongly escaped character" $ do
         let text = "I am [Duke of Aragon.\\"
             regex = Regex "\\a"
         evaluate (matchExpression regex text) `shouldThrow` 
-            errorCall "can only escape characters '\\[]^+.'"
+            errorCall "Character 'a' may not be escaped"
 
       it "fails on surprising ] character" $ do
         let text = "I am ]Duke of Aragon.\\"
             regex = Regex "][\\]\\[]"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "unexpected ] outside of a character class"
+            errorCall "Encountered ] outside group"
 
       it "fails on surprising [ character" $ do
         let text = "I am Duke of Aragon.\\"
             regex = Regex "[[Duke"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "unexpected [ inside of a character class"
+            errorCall "Encountered [ inside group"
 
       it "treats unescaped carats not at the beginning of the character class as an error" $ do
         let text = "Duke of Aragon"
@@ -144,7 +144,7 @@ spec = do
         let text = "i am dooog"
             regex = Regex "do++g"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "unexpected + after +"
+            errorCall "unexpected + after unparsed input"
 
       it "doesn't match 0 instances of repeated class" $ do
         let text = "i am dg"
