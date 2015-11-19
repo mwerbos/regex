@@ -76,7 +76,6 @@ addToken automaton token
 addMiniAutomaton :: Automaton -> Automaton -> Automaton
 addMiniAutomaton mini_graph graph = Automaton {
     stateMap = 
-      trace ("adding " ++ show graph ++ " and " ++ show mini_graph ++ ", got " ++ show combined_graph) $
       insEdge (finalState graph,  find_updated_node 0, Epsilon) combined_graph,
       finalState = find_updated_node (finalState mini_graph)
     }
@@ -90,9 +89,10 @@ addMiniAutomaton mini_graph graph = Automaton {
 
 -- Combines two regexes saying you can see either one of them
 orAutomatons :: Automaton -> Automaton -> Automaton
-orAutomatons aut emptyAutomaton = trace ("or'ing empty with " ++ show aut) $ aut
-orAutomatons emptyAutomaton aut = trace ("or'ing " ++ show aut ++ " with empty") $  aut
-orAutomatons first_aut second_aut = 
+orAutomatons first_aut second_aut 
+  | first_aut == emptyAutomaton = trace ("or'ing empty with " ++ show second_aut) $ second_aut
+  | second_aut == emptyAutomaton = trace ("or'ing empty with " ++ show first_aut) $ first_aut
+  | otherwise = 
   trace ("########## or'ing " ++ show first_aut ++ " with " ++ show second_aut) $
   Automaton {
     stateMap = 

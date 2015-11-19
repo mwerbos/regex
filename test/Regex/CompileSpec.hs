@@ -20,10 +20,10 @@ spec = do
       let token = Group [Single 'y', Single 'd']
           simple_automaton = Automaton {
             stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,())]
-                               [(0,1,Epsilon), (0,3,Epsilon),
-                                (1,2,T $ Single 'y'), (3,4,T $ Single 'd'),
-                                (2,5,Epsilon), (4,5,Epsilon)],
-            finalState = 5
+                               [(0,2,Epsilon), (0,4,Epsilon),
+                                (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
+                                (3,1,Epsilon), (5,1,Epsilon)],
+            finalState = 1
           }
       makeMiniAutomaton token `shouldBe` simple_automaton
   describe "build automaton" $ do
@@ -38,12 +38,12 @@ spec = do
     it "builds an automaton with a character class" $ do
       let parsed = [Group [Single 'y', Single 'd'], Single 'o']
           simple_automaton = Automaton {
-            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,())]
-                               [(0,1,Epsilon), (0,3,Epsilon),
-                                (1,2,T $ Single 'y'), (3,4,T $ Single 'd'),
-                                (2,5,Epsilon), (4,5,Epsilon),
-                                (5,6,T $ Single 'o')],
-            finalState = 6
+            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,()), (7,())]
+                               [(0,2,Epsilon), (0,4,Epsilon),
+                                (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
+                                (3,1,Epsilon), (5,1,Epsilon),
+                                (1,6,Epsilon), (6,7,T $ Single 'o')],
+            finalState = 7
           }
       makeAutomaton parsed `shouldBe` simple_automaton
     it "builds a longer automaton" $ do
