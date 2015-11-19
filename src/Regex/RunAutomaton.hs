@@ -1,7 +1,7 @@
 module Regex.RunAutomaton where
 
 import Regex.Data
-import Regex.Util (findNeighborsOfType)
+import Regex.Util (findNeighborsOfType,getComponentOfType)
 import Regex.Match (matchesToken)
 
 import Data.Graph.Inductive.PatriciaTree(Gr(..))
@@ -62,7 +62,7 @@ runEpsilonMoves automaton state = state { possibleMatches = new_possibilities }
         getEpsilonFriends :: PossibleMatch -> [PossibleMatch]
         getEpsilonFriends (P {matchState = s, startIndex = i}) =
             map (\new_state -> P {matchState = new_state, startIndex = i}) $
-            findNeighborsOfType (== Epsilon) s (stateMap automaton)
+            getComponentOfType (== Epsilon) s (stateMap automaton)
 
 -- Takes all possible matches and makes them go places based on actual moves
 runNonEpsilonMoves :: Automaton -> ProcessingState -> Char -> ProcessingState
@@ -72,7 +72,7 @@ runNonEpsilonMoves automaton state char =
           getMatches :: PossibleMatch -> [PossibleMatch]
           getMatches (P {matchState = s, startIndex = i}) =
               map (\new_state -> P {matchState = new_state, startIndex = i}) $
-              findNeighborsOfType (matches char) s (stateMap automaton)
+              findNeighborsOfType (matches char) (stateMap automaton) s 
 
 matches :: Char -> Edge -> Bool
 matches _ Epsilon = trace "matching against an epsilon move" False

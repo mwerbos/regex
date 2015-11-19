@@ -8,15 +8,28 @@ import qualified Data.Map.Strict as M
 -- Utility for dealing with FGL
 -- Filter for nodes with this label, then filter for certain edges out of it,
 -- then return all of the labels of the nodes at the end of those edges.
-findNeighborsOfType :: Show b => (b -> Bool) -> Node -> Gr () b -> [Node]
-findNeighborsOfType edge_pred node graph = filtered_neighbors
+findNeighborsOfType :: Show b => (b -> Bool) -> Gr () b -> Node -> [Node]
+findNeighborsOfType edge_pred graph node = filtered_neighbors
   where filtered_neighbors = map snd $ filter (\(edge_label,node) -> edge_pred edge_label) neighbors
         neighbors = lneighbors graph node
 
+-- Like 'fix', but provides a starting value.
+runToConvergence :: Eq a => a -> (a -> a) -> a
+runToConvergence x f = if f x == x
+                       then x
+                       else runToConvergence (f x) f
+
 -- Get a component in the graph that is only connected by edges
 -- that satisfy the predicate given.
+-- TODO: I may need to change this to a set, because in theory the list doesn't
+-- have to converge.
 getComponentOfType :: Show b => (b -> Bool) -> Node -> Gr () b -> [Node]
-getComponentOfType edge_pred node graph = error "getComponentOfType not yet defined"
+getComponentOfType edge_pred node graph =
+  runToConvergence [node] (getNeighborsAndSelf edge_pred graph)
+
+getNeighborsAndSelf :: Show b => (b -> Bool) -> Gr () b -> [Node] -> [Node]
+getNeighborsAndSelf edge_pred graph nodes =
+  concat (nodes : map (findNeighborsOfType edge_pred graph) nodes)
 
 -- Takes nodes of interest from the 'extra' graph and translates their new labels.
 addGraphsAndTranslate :: (Show a, Show b) => Gr a b -> Gr a b -> (Gr a b, M.Map Node Node)
