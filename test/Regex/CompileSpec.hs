@@ -72,6 +72,13 @@ spec = do
                                 (3,1,Epsilon), (5,1,Epsilon)],
             finalState = 1
           }
+    it "has an identity of 'emptyAutomaton'" $ do
+      let aut = Automaton {
+            stateMap = mkGraph [(0,()), (1,())] [(0,1,T $ Single 'h')],
+            finalState = 1
+          }
+      orAutomatons aut emptyAutomaton `shouldBe` aut
+      orAutomatons emptyAutomaton aut `shouldBe` aut
   describe "combineThreeGraphs" $ do
     it "combines three graphs correctly" $ do
       let first = mkGraph [(0,()), (1,())] [(0,1,T $ Single 'h')]

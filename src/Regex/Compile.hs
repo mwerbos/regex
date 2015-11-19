@@ -90,13 +90,20 @@ addMiniAutomaton mini_graph graph = Automaton {
 
 -- Combines two regexes saying you can see either one of them
 orAutomatons :: Automaton -> Automaton -> Automaton
-orAutomatons automaton emptyAutomaton = automaton
-orAutomatons emptyAutomaton automaton = automaton
-orAutomatons first_aut second_aut = Automaton {
-    stateMap = add_epsilon_transitions overall_graph,
+orAutomatons aut emptyAutomaton = trace ("or'ing empty with " ++ show aut) $ aut
+orAutomatons emptyAutomaton aut = trace ("or'ing " ++ show aut ++ " with empty") $  aut
+orAutomatons first_aut second_aut = 
+  trace ("########## or'ing " ++ show first_aut ++ " with " ++ show second_aut) $
+  Automaton {
+    stateMap = 
+        trace ("got combined graph: " ++ show overall_graph ++ ", now adding e-transitions") $
+        add_epsilon_transitions overall_graph,
     finalState = translate_base_graph_node 1
   }
-  where (overall_graph, (translate_base_graph_node, translate_first_graph_node, translate_second_graph_node)) =
+  where (overall_graph,
+            (translate_base_graph_node,
+             translate_first_graph_node,
+             translate_second_graph_node)) =
             combineThreeGraphs (base_graph, stateMap first_aut, stateMap second_aut)
         -- base_graph: just the beginning and end nodes we add to A and B
         base_graph = mkGraph [(0,()), (1,())] []
@@ -135,7 +142,10 @@ makeMiniAutomaton (NegChar c) = Automaton {
   stateMap = insEdge (0, 1, T $ NegChar c) $ insNodes [(0,()), (1,())] $ empty,
   finalState = 1
 }
-makeMiniAutomaton (Group tokens) = foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton tokens
+makeMiniAutomaton (Group tokens) = trace ("***********mini automatons for this group: " ++ show (map makeMiniAutomaton tokens)) $
+    trace ("or on first: " ++ show (orAutomatons emptyAutomaton (head $ map makeMiniAutomaton tokens))) $
+    trace ("first: " ++ show (head $ map makeMiniAutomaton tokens)) $
+    foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton tokens
 makeMiniAutomaton (NegGroup tokens) = 
   foldl orAutomatons emptyAutomaton $ map (makeMiniAutomaton . negate) tokens
   where negate (Single c) = NegChar c
