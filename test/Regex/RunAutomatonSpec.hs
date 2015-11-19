@@ -92,6 +92,20 @@ spec = do
     it "does not move on after seeing a wrong character" $ do
       runStatesOnce simple_automaton initialState 'r' `shouldBe`
           initialState { possibleMatches = [] }
+    it "moves on after seeing an or'ed character" $ do
+      let first_state = ProcessingState {
+            possibleMatches = [P {matchState = 0, startIndex = 1 },
+                               P {matchState = 3, startIndex = 0 }],
+            currentIndex = 1,
+            currentMatches = []
+          }
+      runStatesOnce or_automaton first_state 'o' `shouldBe`
+          ProcessingState {
+            possibleMatches = [P {matchState = 0, startIndex = 2 },
+                               P {matchState = 7, startIndex = 0 }],
+            currentIndex = 1,
+            currentMatches = []
+          }
 
   describe "runNonEpsilonMoves" $ do
     it "runs a small automaton on a single character" $ do
