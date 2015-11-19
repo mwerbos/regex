@@ -13,6 +13,17 @@ simple_automaton = Automaton {
   finalState = 5
 }
 
+-- Automaton with a character class
+or_automaton :: Automaton
+or_automaton = Automaton {
+  stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,()), (7,())]
+                     [(0,2,Epsilon), (0,4,Epsilon),
+                      (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
+                      (3,1,Epsilon), (5,1,Epsilon),
+                      (1,6,Epsilon), (6,7,T $ Single 'o')],
+  finalState = 7
+}
+
 spec :: Spec
 spec = do
   describe "runAutomaton" $ do
@@ -31,6 +42,27 @@ spec = do
                                P {matchState = 1, startIndex = 0 }],
             currentIndex = 1,
             currentMatches = []
+          }
+    it "moves to the next state on seeing an or'ed character" $ do
+      runAutomatonOnce or_automaton initialState 'y' `shouldBe`
+          ProcessingState {
+            possibleMatches = [P {matchState = 0, startIndex = 1 },
+                               P {matchState = 3, startIndex = 0 }],
+            currentIndex = 1,
+            currentMatches = []
+          }
+    it "moves to the next state after seeing an or'ed character" $ do
+      let first_state = ProcessingState {
+            possibleMatches = [P {matchState = 0, startIndex = 1 },
+                               P {matchState = 3, startIndex = 0 }],
+            currentIndex = 1,
+            currentMatches = []
+          }
+      runAutomatonOnce or_automaton first_state 'o' `shouldBe`
+          ProcessingState {
+            possibleMatches = [],
+            currentIndex = 2,
+            currentMatches = [Interval (0,2)]
           }
     it "moves to the end state on seeing the right character" $ do
       let almostEndState = ProcessingState {
