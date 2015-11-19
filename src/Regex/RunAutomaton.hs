@@ -7,6 +7,7 @@ import Regex.Match (matchesToken)
 import Data.Graph.Inductive.PatriciaTree(Gr(..))
 import Data.Graph.Inductive.Graph(lab,lneighbors,matchAny,labfilter,Node)
 import Data.Maybe(catMaybes)
+import qualified Data.Set as S
 
 import Debug.Trace (trace) -- TODO remove
 
@@ -62,7 +63,7 @@ runEpsilonMoves automaton state = state { possibleMatches = new_possibilities }
         getEpsilonFriends :: PossibleMatch -> [PossibleMatch]
         getEpsilonFriends (P {matchState = s, startIndex = i}) =
             map (\new_state -> P {matchState = new_state, startIndex = i}) $
-            getComponentOfType (== Epsilon) s (stateMap automaton)
+            S.toList $ getComponentOfType (== Epsilon) s (stateMap automaton)
 
 -- Takes all possible matches and makes them go places based on actual moves
 runNonEpsilonMoves :: Automaton -> ProcessingState -> Char -> ProcessingState
@@ -72,7 +73,7 @@ runNonEpsilonMoves automaton state char =
           getMatches :: PossibleMatch -> [PossibleMatch]
           getMatches (P {matchState = s, startIndex = i}) =
               map (\new_state -> P {matchState = new_state, startIndex = i}) $
-              findNeighborsOfType (matches char) (stateMap automaton) s 
+              S.toList $ findNeighborsOfType (matches char) (stateMap automaton) s 
 
 matches :: Char -> Edge -> Bool
 matches _ Epsilon = trace "matching against an epsilon move" False
