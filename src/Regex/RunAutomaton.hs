@@ -1,6 +1,7 @@
 module Regex.RunAutomaton where
 
 import Regex.Data
+import Regex.Util (findNeighborsOfType)
 import Regex.Match (matchesToken)
 
 import Data.Graph.Inductive.PatriciaTree(Gr(..))
@@ -62,14 +63,6 @@ runEpsilonMoves automaton state = state { possibleMatches = new_possibilities }
         getEpsilonFriends (P {matchState = s, startIndex = i}) =
             map (\new_state -> P {matchState = new_state, startIndex = i}) $
             findNeighborsOfType (== Epsilon) s (stateMap automaton)
-
--- Utility for dealing with FGL
--- Filter for nodes with this label, then filter for certain edges out of it,
--- then return all of the labels of the nodes at the end of those edges.
-findNeighborsOfType :: (b -> Bool) -> Node -> Gr () b -> [Node]
-findNeighborsOfType edge_pred node graph = filtered_neighbors
-  where filtered_neighbors = map snd $ filter (\(edge_label,node) -> edge_pred edge_label) neighbors
-        neighbors = lneighbors graph node
 
 -- Takes all possible matches and makes them go places based on actual moves
 runNonEpsilonMoves :: Automaton -> ProcessingState -> Char -> ProcessingState

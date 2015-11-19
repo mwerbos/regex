@@ -1,11 +1,22 @@
-module Regex.Util (relabelAndTranslate, addGraphsAndTranslate) where
--- relabelAndTranslate is only exported for testing purposes.
--- TODO: put it into an Internal module for testing.
+module Regex.Util where
 
-import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdge,insNode,delNode,Context(..),Node,labNodes,nodes)
+import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdge,insNode,delNode,Context(..),Node,labNodes,nodes,lneighbors)
 import Data.Graph.Inductive.PatriciaTree (Gr(..))
 import Data.List (elem,delete)
 import qualified Data.Map.Strict as M
+
+-- Utility for dealing with FGL
+-- Filter for nodes with this label, then filter for certain edges out of it,
+-- then return all of the labels of the nodes at the end of those edges.
+findNeighborsOfType :: Show b => (b -> Bool) -> Node -> Gr () b -> [Node]
+findNeighborsOfType edge_pred node graph = filtered_neighbors
+  where filtered_neighbors = map snd $ filter (\(edge_label,node) -> edge_pred edge_label) neighbors
+        neighbors = lneighbors graph node
+
+-- Get a component in the graph that is only connected by edges
+-- that satisfy the predicate given.
+getComponentOfType :: Show b => (b -> Bool) -> Node -> Gr () b -> [Node]
+getComponentOfType edge_pred node graph = error "getComponentOfType not yet defined"
 
 -- Takes nodes of interest from the 'extra' graph and translates their new labels.
 addGraphsAndTranslate :: (Show a, Show b) => Gr a b -> Gr a b -> (Gr a b, M.Map Node Node)
