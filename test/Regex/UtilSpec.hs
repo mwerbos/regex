@@ -24,6 +24,3 @@ spec = do
           (mkGraph [(0,()), (1,()), (2,()), (3,())]
                    [(0,1,Single 'h'), (2,3,Single 'i')],
            M.fromList [(0,2), (1,3)])
-
-main :: IO ()
-main = hspec spec

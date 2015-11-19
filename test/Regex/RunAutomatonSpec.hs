@@ -151,6 +151,3 @@ spec = do
             currentMatches = [Interval (0, 2)]
           } 
       popFinalStates 2 state_with_unpopped_match `shouldBe` state_with_popped_match
-
-main :: IO ()
-main = hspec spec

@@ -212,6 +212,3 @@ spec = do
         let text = "abcbcd"
             regex = Regex "abc+d"
         matchExpression regex text `shouldBe` [Interval (0,6)]
-
-main :: IO ()
-main = hspec spec

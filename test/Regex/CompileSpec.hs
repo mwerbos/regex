@@ -93,6 +93,3 @@ spec = do
       fn2 1 `shouldBe` 3
       fn3 0 `shouldBe` 4
       fn3 1 `shouldBe` 5
-
-main :: IO ()
-main = hspec spec
