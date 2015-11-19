@@ -1,7 +1,7 @@
 module Regex.RunAutomaton where
 
 import Regex.Data
-import Regex.Util (findNeighborsOfType,getComponentOfType)
+import Regex.Util (findNeighborsOfType,getComponentOfType,collapseSet)
 import Regex.Match (matchesToken)
 
 import Data.Graph.Inductive.PatriciaTree(Gr(..))
@@ -12,15 +12,15 @@ import qualified Data.Set as S
 import Debug.Trace (trace) -- TODO remove
 
 runAutomaton :: Automaton -> String -> [Interval]
-runAutomaton automaton string = currentMatches end_state
+runAutomaton automaton string = S.toList $ currentMatches end_state
   where end_state = foldl (runAutomatonOnce automaton) initialState string
 
-data PossibleMatch = P { matchState :: Node, startIndex :: Int } deriving (Show,Eq)
+data PossibleMatch = P { matchState :: Node, startIndex :: Int } deriving (Show,Eq,Ord)
 
 data ProcessingState = ProcessingState {
-    possibleMatches :: [PossibleMatch],
+    possibleMatches :: S.Set PossibleMatch,
     currentIndex :: Int,
-    currentMatches :: [Interval]
+    currentMatches :: S.Set Interval
 } deriving (Show,Eq)
 
 initialMatch :: PossibleMatch
@@ -28,9 +28,9 @@ initialMatch = P { matchState = 0, startIndex = 0 }
 
 initialState :: ProcessingState
 initialState = ProcessingState {
-    possibleMatches = [initialMatch],
+    possibleMatches = S.insert initialMatch S.empty,
     currentIndex = 0,
-    currentMatches = []
+    currentMatches = S.empty
 }
 
 runAutomatonOnce :: Automaton -> ProcessingState -> Char -> ProcessingState
@@ -43,8 +43,8 @@ runAutomatonOnce automaton state char =
 
 addInitialState :: ProcessingState -> ProcessingState
 addInitialState state = state {
-  possibleMatches = P { matchState = 0, startIndex = currentIndex state } :
-                      possibleMatches state
+  possibleMatches = S.insert (P { matchState = 0, startIndex = currentIndex state })
+                             (possibleMatches state)
 }
 
 incrementIndex :: ProcessingState -> ProcessingState
@@ -58,22 +58,22 @@ runStatesOnce aut st c = runNonEpsilonMoves aut (runEpsilonMoves aut st) c
 -- via only epsilon moves.
 runEpsilonMoves :: Automaton -> ProcessingState -> ProcessingState
 runEpsilonMoves automaton state = state { possibleMatches = new_possibilities }
-  where new_possibilities = concat 
-            (possibleMatches state : map getEpsilonFriends (possibleMatches state))
-        getEpsilonFriends :: PossibleMatch -> [PossibleMatch]
+  where new_possibilities = S.union
+            (possibleMatches state) (collapseSet (S.map getEpsilonFriends (possibleMatches state)))
+        getEpsilonFriends :: PossibleMatch -> S.Set PossibleMatch
         getEpsilonFriends (P {matchState = s, startIndex = i}) =
-            map (\new_state -> P {matchState = new_state, startIndex = i}) $
-            S.toList $ getComponentOfType (== Epsilon) s (stateMap automaton)
+            S.map (\new_state -> P {matchState = new_state, startIndex = i}) $
+            getComponentOfType (== Epsilon) s (stateMap automaton)
 
 -- Takes all possible matches and makes them go places based on actual moves
 runNonEpsilonMoves :: Automaton -> ProcessingState -> Char -> ProcessingState
 runNonEpsilonMoves automaton state char =
     state { possibleMatches = new_possibilities }
-    where new_possibilities = concat $ map getMatches (possibleMatches state)
-          getMatches :: PossibleMatch -> [PossibleMatch]
+    where new_possibilities = collapseSet $ S.map getMatches (possibleMatches state)
+          getMatches :: PossibleMatch -> S.Set PossibleMatch
           getMatches (P {matchState = s, startIndex = i}) =
-              map (\new_state -> P {matchState = new_state, startIndex = i}) $
-              S.toList $ findNeighborsOfType (matches char) (stateMap automaton) s 
+              S.map (\new_state -> P {matchState = new_state, startIndex = i}) $
+              findNeighborsOfType (matches char) (stateMap automaton) s 
 
 matches :: Char -> Edge -> Bool
 matches _ Epsilon = trace "matching against an epsilon move" False
@@ -83,9 +83,9 @@ matches c (T token) = matchesToken c token
 popFinalStates :: Node -> ProcessingState -> ProcessingState
 popFinalStates final_state state = state { 
     possibleMatches = new_possibilities,
-    currentMatches = (currentMatches state) ++ new_matches
-} where new_possibilities = filter (not . isEnd) (possibleMatches state)
-        new_matches = map toInterval $ filter isEnd (possibleMatches state)
+    currentMatches = S.union (currentMatches state) new_matches
+} where new_possibilities = S.filter (not . isEnd) (possibleMatches state)
+        new_matches = S.map toInterval $ S.filter isEnd (possibleMatches state)
 
         isEnd :: PossibleMatch -> Bool
         isEnd p = matchState p == final_state

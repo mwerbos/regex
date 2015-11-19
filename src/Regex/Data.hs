@@ -6,7 +6,7 @@ import Data.Graph.Inductive.Graph(Node)
 data Regex = Regex String deriving (Show, Eq)
 
 -- An interval. (x,y) => y must > x
-data Interval = Interval (Int, Int) deriving (Show, Eq)
+data Interval = Interval (Int, Int) deriving (Show, Eq, Ord)
 
 -- An edge in the graph can be a token or an epsilon-transition
 -- (a transition requiring 0 characters to match)
