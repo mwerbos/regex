@@ -6,8 +6,6 @@ import Data.List (elem,delete)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
-import Debug.Trace (trace) -- TODO remove
-
 -- Utility for dealing with FGL
 -- Filter for nodes with this label, then filter for certain edges out of it,
 -- then return all of the labels of the nodes at the end of those edges.
@@ -18,7 +16,7 @@ findNeighborsOfType edge_pred graph node = S.fromList filtered_neighbors
 
 -- Like 'fix', but provides a starting value.
 runToConvergence :: Eq a => a -> (a -> a) -> a
-runToConvergence x f = trace ("running to convergence") $ if f x == x
+runToConvergence x f = if f x == x
                        then x
                        else runToConvergence (f x) f
 
@@ -26,7 +24,7 @@ runToConvergence x f = trace ("running to convergence") $ if f x == x
 -- that satisfy the predicate given.
 getComponentOfType :: Show b => (b -> Bool) -> Node -> Gr () b -> S.Set Node
 getComponentOfType edge_pred node graph =
-  trace ("getting component") $ runToConvergence (S.insert node S.empty) (getNeighborsAndSelf edge_pred graph)
+  runToConvergence (S.insert node S.empty) (getNeighborsAndSelf edge_pred graph)
 
 collapseSet :: Ord a => S.Set (S.Set a) -> S.Set a
 collapseSet = S.foldl S.union S.empty
