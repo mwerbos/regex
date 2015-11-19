@@ -101,8 +101,27 @@ spec = do
           }
       runStatesOnce or_automaton first_state 'o' `shouldBe`
           ProcessingState {
-            possibleMatches = [P {matchState = 0, startIndex = 2 },
-                               P {matchState = 7, startIndex = 0 }],
+            possibleMatches = [P {matchState = 7, startIndex = 0 }],
+            currentIndex = 1,
+            currentMatches = []
+          }
+
+  describe "runEpsilonMoves" $ do
+    it "correctly moves automaton after seeing an or'ed character" $ do
+      let first_state = ProcessingState {
+            possibleMatches = [P {matchState = 0, startIndex = 1 },
+                               P {matchState = 3, startIndex = 0 }],
+            currentIndex = 1,
+            currentMatches = []
+          }
+      runEpsilonMoves or_automaton first_state `shouldBe`
+          ProcessingState {
+            possibleMatches = [P {matchState = 0, startIndex = 1},
+                               P {matchState = 3, startIndex = 0},
+                               P {matchState = 2, startIndex = 1},
+                               P {matchState = 4, startIndex = 1},
+                               P {matchState = 1, startIndex = 0},
+                               P {matchState = 6, startIndex = 0}],
             currentIndex = 1,
             currentMatches = []
           }
