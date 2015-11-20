@@ -46,6 +46,17 @@ spec = do
             finalState = 7
           }
       makeAutomaton parsed `shouldBe` simple_automaton
+    it "builds an automaton with a negated character class" $ do
+      let parsed = [NegGroup [Single 'y', Single 'd'], Single 'o']
+          simple_automaton = Automaton {
+            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,()), (7,())]
+                               [(0,2,Epsilon), (0,4,Epsilon),
+                                (2,3,T $ NegChar 'y'), (4,5,T $ NegChar 'd'),
+                                (3,1,Epsilon), (5,1,Epsilon),
+                                (1,6,Epsilon), (6,7,T $ Single 'o')],
+            finalState = 7
+          }
+      makeAutomaton parsed `shouldBe` simple_automaton
     it "builds a longer automaton" $ do
       let parsed = [Single 'f', Single 'o', Single 'x']
           simple_automaton = Automaton {
