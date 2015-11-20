@@ -3,12 +3,15 @@ module Regex.RunAutomatonSpec where
 import SpecHelper
 import Regex.RunAutomaton
 import Control.Exception (evaluate)
-import Data.Graph.Inductive.Graph (mkGraph)
+import Data.Graph.Inductive.Graph (mkGraph,Node)
 import qualified Data.Set as S
+
+nLengthNodes :: Int -> [(Node,())]
+nLengthNodes n = take n $ zip [0..] (repeat ())
 
 simple_automaton :: Automaton
 simple_automaton = Automaton {
-  stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,())]
+  stateMap = mkGraph (nLengthNodes 6)
                      [(0,1,T $ Single 'f'), (1,2,Epsilon), (2,3,T $ Single 'o'),
                       (3,4,Epsilon), (4,5,T $ Single 'x')],
   finalState = 5
@@ -17,7 +20,7 @@ simple_automaton = Automaton {
 -- Automaton with a character class
 or_automaton :: Automaton
 or_automaton = Automaton {
-  stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,()), (7,())]
+  stateMap = mkGraph (nLengthNodes 8)
                      [(0,2,Epsilon), (0,4,Epsilon),
                       (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
                       (3,1,Epsilon), (5,1,Epsilon),
@@ -28,7 +31,7 @@ or_automaton = Automaton {
 -- Automaton with a negated character class
 neg_automaton :: Automaton
 neg_automaton = Automaton {
-  stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,()), (7,())]
+  stateMap = mkGraph (nLengthNodes 8)
                      [(0,2,Epsilon), (0,4,Epsilon),
                       (2,3,T $ NegChar 'y'), (4,5,T $ NegChar 'd'),
                       (3,1,Epsilon), (5,1,Epsilon),
@@ -45,6 +48,22 @@ spec = do
       runAutomaton simple_automaton "fox" `shouldBe` [Interval (0, 3)]
     it "runs the automaton on the a slightly less minimal string" $ do
       runAutomaton simple_automaton " fox" `shouldBe` [Interval (1, 4)]
+
+    it "runs an automaton with multiple character classes" $ do
+      let automaton = Automaton {
+            stateMap = mkGraph (nLengthNodes 14)
+                               [(0,2,Epsilon), (0,4,Epsilon),
+                                (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
+                                (3,1,Epsilon), (5,1,Epsilon),
+                                (1,6,Epsilon), (6,7,T $ Single 'o'),
+                                (7,8,Epsilon),
+                                (8,10,Epsilon), (8,12,Epsilon),
+                                (10,11,T $ Single 'g'), (12,13,T $ Single 'b'),
+                                (11,9,Epsilon), (13,9,Epsilon)],
+            finalState = 9
+          }
+      runAutomaton automaton "dog" `shouldBe` [Interval (0, 3)]
+      runAutomaton automaton "yob" `shouldBe` [Interval (0, 3)]
 
   describe "runAutomatonOnce" $ do
     it "moves to the next state on seeing the right character" $ do
