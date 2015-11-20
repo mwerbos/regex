@@ -24,6 +24,11 @@ spec = do
             stateMap = mkGraph [(0,()), (1,())] [(0,1,T $ Single '\\')],
             finalState = 1
           }
+    it "processes a regex with an escaped bracket" $ do
+      processRegex (Regex "\\[") `shouldBe` Automaton {
+            stateMap = mkGraph [(0,()), (1,())] [(0,1,T $ Single '[')],
+            finalState = 1
+          }
   describe "tokenize" $ do
     it "tokenizes a simple expression" $ do
       let regex = Regex "hi"
