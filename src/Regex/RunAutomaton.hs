@@ -11,6 +11,12 @@ import qualified Data.Set as S
 
 import Debug.Trace (trace) -- TODO remove
 
+-- A final processing step, which takes the matches we've generated
+-- (consisting of *all* possible matches) and removes all the matches that don't
+-- satisfy the "non-overlapping, greediest possible" criteria.
+weedMatches :: [Interval] -> [Interval]
+weedMatches = id -- TODO
+
 runAutomaton :: Automaton -> String -> [Interval]
 runAutomaton automaton string = S.toList $ currentMatches end_state
   where end_state = foldl (runAutomatonOnce automaton) initialState string
