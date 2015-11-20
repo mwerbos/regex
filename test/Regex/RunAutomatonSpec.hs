@@ -61,7 +61,7 @@ spec = do
           }
       runAutomatonOnce or_automaton first_state 'o' `shouldBe`
           ProcessingState {
-            possibleMatches = S.empty,
+            possibleMatches = S.fromList [P {matchState = 0, startIndex = 2 }],
             currentIndex = 2,
             currentMatches = S.fromList [Interval (0,2)]
           }
@@ -122,6 +122,7 @@ spec = do
                                P {matchState = 2, startIndex = 1},
                                P {matchState = 4, startIndex = 1},
                                P {matchState = 1, startIndex = 0},
+                               P {matchState = 5, startIndex = 0},
                                P {matchState = 6, startIndex = 0}],
             currentIndex = 1,
             currentMatches = S.empty
