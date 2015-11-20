@@ -7,6 +7,18 @@ import Data.Graph.Inductive.Graph (mkGraph)
 
 spec :: Spec
 spec = do
+  describe "processRegex" $ do
+    it "correctly processes a regex with a negated character class" $ do
+      let regex = Regex "[^yd]o"
+          simple_automaton = Automaton {
+            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,()), (7,())]
+                               [(0,2,Epsilon), (0,4,Epsilon),
+                                (2,3,T $ NegChar 'y'), (4,5,T $ NegChar 'd'),
+                                (3,1,Epsilon), (5,1,Epsilon),
+                                (1,6,Epsilon), (6,7,T $ Single 'o')],
+            finalState = 7
+          }
+      processRegex regex `shouldBe` simple_automaton
   describe "tokenize" $ do
     it "tokenizes a simple expression" $ do
       let regex = Regex "hi"
