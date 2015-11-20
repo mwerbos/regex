@@ -23,10 +23,20 @@ spec = do
     it "tokenizes a simple expression" $ do
       let regex = Regex "hi"
       tokenize regex `shouldBe` [('h', OtherChar), ('i', OtherChar)]
+    it "tokenizes an expression with negated character class" $ do
+      let regex = Regex "[^yd]o"
+      tokenize regex `shouldBe` [('[', LBracket), ('^', Carat),
+                                 ('y', OtherChar), ('d', OtherChar),
+                                 (']', RBracket), ('o', OtherChar)]
   describe "parse" $ do
     it "parses a simple expression" $ do
       let tokenized = [('f', OtherChar), ('o', OtherChar), ('x', OtherChar)]
       parse tokenized `shouldBe` [Single 'f', Single 'o', Single 'x']
+    it "parses with a negated character class" $ do
+      let tokenized = [('[', LBracket), ('^', Carat),
+                       ('y', OtherChar), ('d', OtherChar),
+                       (']', RBracket), ('o', OtherChar)]
+      parse tokenized `shouldBe` [NegGroup [Single 'y', Single 'd'], Single 'o']
   describe "makeMiniAutomaton" $ do
     it "makes a mini automaton with a character class" $ do
       let token = Group [Single 'y', Single 'd']
