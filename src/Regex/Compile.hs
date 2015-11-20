@@ -223,10 +223,10 @@ makeGroupPiles tokens = final_parse
 -- If it's a group, parses the characters inside the group.
 -- Only wildcards and escapes are allowed.
 innerParseGroup :: MaybeParsed -> MaybeParsed
-innerParseGroup (PartiallyParsedGroup token_tuples Negated) =
+innerParseGroup (PartiallyParsedGroup token_tuples Unnegated) =
     Parsed (Group 
         (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
-innerParseGroup (PartiallyParsedGroup token_tuples Unnegated) =
+innerParseGroup (PartiallyParsedGroup token_tuples Negated) =
     Parsed (NegGroup
         (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
 innerParseGroup other = other
