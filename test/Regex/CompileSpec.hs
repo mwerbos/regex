@@ -29,6 +29,15 @@ spec = do
             stateMap = mkGraph [(0,()), (1,())] [(0,1,T $ Single '[')],
             finalState = 1
           }
+    it "processes a regex with an escaped bracked *inside* a character class" $ do
+      let automaton = Automaton {
+            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,())]
+                               [(0,2,Epsilon), (0,4,Epsilon),
+                                (2,3,T $ Single ']'), (4,5,T $ Single '['),
+                                (3,1,Epsilon), (5,1,Epsilon)],
+            finalState = 1
+          }
+      processRegex (Regex "[\\]\\[]") `shouldBe` automaton
   describe "tokenize" $ do
     it "tokenizes a simple expression" $ do
       let regex = Regex "hi"
