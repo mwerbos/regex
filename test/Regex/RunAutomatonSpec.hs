@@ -25,6 +25,17 @@ or_automaton = Automaton {
   finalState = 7
 }
 
+-- Automaton with a negated character class
+neg_automaton :: Automaton
+neg_automaton = Automaton {
+  stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,()), (7,())]
+                     [(0,2,Epsilon), (0,4,Epsilon),
+                      (2,3,T $ NegChar 'y'), (4,5,T $ NegChar 'd'),
+                      (3,1,Epsilon), (5,1,Epsilon),
+                      (1,6,Epsilon), (6,7,T $ Single 'o')],
+  finalState = 7
+}
+
 spec :: Spec
 spec = do
   describe "runAutomaton" $ do
@@ -46,6 +57,14 @@ spec = do
           }
     it "moves to the next state on seeing an or'ed character" $ do
       runAutomatonOnce or_automaton initialState 'y' `shouldBe`
+          ProcessingState {
+            possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 },
+                               P {matchState = 3, startIndex = 0 }],
+            currentIndex = 1,
+            currentMatches = S.empty
+          }
+    it "moves to the next state on NOT seeing a negated character" $ do
+      runAutomatonOnce neg_automaton initialState 'g' `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 },
                                P {matchState = 3, startIndex = 0 }],
