@@ -146,7 +146,8 @@ spec = do
     it "runs a small automaton on a single character" $ do
       runStatesOnce simple_automaton 'f' initialState `shouldBe`
           ProcessingState {
-            possibleMatches = S.fromList [P {matchState = 1, startIndex = 0 }],
+            possibleMatches = S.fromList [P {matchState = 1, startIndex = 0 },
+                                          P {matchState = 2, startIndex = 0 }],
             currentIndex = 0,
             currentMatches = S.empty 
           }
