@@ -37,7 +37,7 @@ runAutomatonOnce :: Automaton -> ProcessingState -> Char -> ProcessingState
 runAutomatonOnce automaton state char =
     addInitialState $
     (popFinalStates (finalState automaton)) $
-    incrementIndex (runStatesOnce automaton state char)
+    incrementIndex (runStatesOnce automaton char state)
         -- First get new states by running the automaton
         -- Then pop any final states onto the intervals list
 
@@ -51,8 +51,8 @@ incrementIndex :: ProcessingState -> ProcessingState
 incrementIndex state = state { currentIndex = (currentIndex state) + 1 }
 
 -- Runs the automaton over every current possible match, with the given character
-runStatesOnce :: Automaton -> ProcessingState -> Char -> ProcessingState
-runStatesOnce aut st c = runNonEpsilonMoves aut (runEpsilonMoves aut st) c
+runStatesOnce :: Automaton -> Char -> ProcessingState -> ProcessingState
+runStatesOnce aut c st = (runEpsilonMoves aut . runNonEpsilonMoves aut c . runEpsilonMoves aut) st
 
 -- Takes all the possible matches and multiplies them by the places they can go
 -- via only epsilon moves.
@@ -66,8 +66,8 @@ runEpsilonMoves automaton state = state { possibleMatches = new_possibilities }
             getComponentOfType (== Epsilon) s (stateMap automaton)
 
 -- Takes all possible matches and makes them go places based on actual moves
-runNonEpsilonMoves :: Automaton -> ProcessingState -> Char -> ProcessingState
-runNonEpsilonMoves automaton state char =
+runNonEpsilonMoves :: Automaton -> Char -> ProcessingState -> ProcessingState
+runNonEpsilonMoves automaton char state =
     state { possibleMatches = new_possibilities }
     where new_possibilities = collapseSet $ S.map getMatches (possibleMatches state)
           getMatches :: PossibleMatch -> S.Set PossibleMatch
