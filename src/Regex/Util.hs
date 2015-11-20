@@ -1,6 +1,6 @@
 module Regex.Util where
 
-import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdge,insNode,delNode,Context(..),Node,labNodes,nodes,lneighbors)
+import Data.Graph.Inductive.Graph (newNodes,buildGr,ufold,insEdge,insNode,delNode,Context(..),Node,labNodes,nodes,lsuc)
 import Data.Graph.Inductive.PatriciaTree (Gr(..))
 import Data.List (elem,delete)
 import qualified Data.Map.Strict as M
@@ -11,8 +11,8 @@ import qualified Data.Set as S
 -- then return all of the labels of the nodes at the end of those edges.
 findNeighborsOfType :: Show b => (b -> Bool) -> Gr () b -> Node -> S.Set Node
 findNeighborsOfType edge_pred graph node = S.fromList filtered_neighbors
-  where filtered_neighbors = map snd $ filter (\(edge_label,node) -> edge_pred edge_label) neighbors
-        neighbors = lneighbors graph node
+  where filtered_neighbors = map fst $ filter (\(node, edge_label) -> edge_pred edge_label) neighbors
+        neighbors = lsuc graph node
 
 -- Like 'fix', but provides a starting value.
 runToConvergence :: Eq a => a -> (a -> a) -> a

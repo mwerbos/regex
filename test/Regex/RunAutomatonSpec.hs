@@ -172,7 +172,7 @@ spec = do
     it "correctly moves automaton after seeing an or'ed character" $ do
       let first_state = ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 },
-                               P {matchState = 3, startIndex = 0 }],
+                                          P {matchState = 3, startIndex = 0 }],
             currentIndex = 1,
             currentMatches = S.empty
           }
@@ -183,7 +183,6 @@ spec = do
                                P {matchState = 2, startIndex = 1},
                                P {matchState = 4, startIndex = 1},
                                P {matchState = 1, startIndex = 0},
-                               P {matchState = 5, startIndex = 0},
                                P {matchState = 6, startIndex = 0}],
             currentIndex = 1,
             currentMatches = S.empty
