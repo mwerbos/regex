@@ -1,2 +1,2 @@
 #!/bin/bash
-runhaskell -i:src:test test/Spec.hs
+runhaskell -i:src:test test/Spec.hs $1

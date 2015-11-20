@@ -76,7 +76,7 @@ runNonEpsilonMoves automaton state char =
               findNeighborsOfType (matches char) (stateMap automaton) s 
 
 matches :: Char -> Edge -> Bool
-matches _ Epsilon = trace "matching against an epsilon move" False
+matches _ Epsilon = False
 matches c (T token) = matchesToken c token
 
 -- Removes all states that are the final state and turns them into matches
