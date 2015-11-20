@@ -3,7 +3,10 @@ module Regex.CompileSpec where
 import SpecHelper
 import Regex.Compile
 import Control.Exception (evaluate)
-import Data.Graph.Inductive.Graph (mkGraph)
+import Data.Graph.Inductive.Graph (mkGraph,Node)
+
+nLengthNodes :: Int -> [(Node,())]
+nLengthNodes n = take n $ zip [0..] (repeat ())
 
 spec :: Spec
 spec = do
@@ -19,6 +22,21 @@ spec = do
             finalState = 7
           }
       processRegex regex `shouldBe` simple_automaton
+    it "processes a regex with two character classes" $ do
+      let regex = Regex "[yd]o[gb]"
+          automaton = Automaton {
+            stateMap = mkGraph (nLengthNodes 14)
+                               [(0,2,Epsilon), (0,4,Epsilon),
+                                (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
+                                (3,1,Epsilon), (5,1,Epsilon),
+                                (1,6,Epsilon), (6,7,T $ Single 'o'),
+                                (7,8,Epsilon),
+                                (8,10,Epsilon), (8,12,Epsilon),
+                                (10,11,T $ Single 'g'), (12,13,T $ Single 'b'),
+                                (11,9,Epsilon), (13,9,Epsilon)],
+            finalState = 9
+          }
+      processRegex regex `shouldBe` automaton
     it "processes a regex with an escaped backslash" $ do
       processRegex (Regex "\\\\") `shouldBe` Automaton {
             stateMap = mkGraph [(0,()), (1,())] [(0,1,T $ Single '\\')],
