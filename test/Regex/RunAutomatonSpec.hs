@@ -39,6 +39,21 @@ neg_automaton = Automaton {
   finalState = 7
 }
 
+-- Automaton with two character classes
+yob_dog_automaton :: Automaton
+yob_dog_automaton = Automaton {
+  stateMap = mkGraph (nLengthNodes 14)
+                     [(0,2,Epsilon), (0,4,Epsilon),
+                      (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
+                      (3,1,Epsilon), (5,1,Epsilon),
+                      (1,6,Epsilon), (6,7,T $ Single 'o'),
+                      (7,8,Epsilon),
+                      (8,10,Epsilon), (8,12,Epsilon),
+                      (10,11,T $ Single 'g'), (12,13,T $ Single 'b'),
+                      (11,9,Epsilon), (13,9,Epsilon)],
+  finalState = 9
+}
+
 spec :: Spec
 spec = do
   describe "runAutomaton" $ do
@@ -50,20 +65,7 @@ spec = do
       runAutomaton simple_automaton " fox" `shouldBe` [Interval (1, 4)]
 
     it "runs an automaton with multiple character classes" $ do
-      let automaton = Automaton {
-            stateMap = mkGraph (nLengthNodes 14)
-                               [(0,2,Epsilon), (0,4,Epsilon),
-                                (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
-                                (3,1,Epsilon), (5,1,Epsilon),
-                                (1,6,Epsilon), (6,7,T $ Single 'o'),
-                                (7,8,Epsilon),
-                                (8,10,Epsilon), (8,12,Epsilon),
-                                (10,11,T $ Single 'g'), (12,13,T $ Single 'b'),
-                                (11,9,Epsilon), (13,9,Epsilon)],
-            finalState = 9
-          }
-      runAutomaton automaton "dog" `shouldBe` [Interval (0, 3)]
-      runAutomaton automaton "yob" `shouldBe` [Interval (0, 3)]
+      runAutomaton yob_dog_automaton "dog" `shouldBe` [Interval (0, 3)]
 
   describe "runAutomatonOnce" $ do
     it "moves to the next state on seeing the right character" $ do
@@ -104,6 +106,20 @@ spec = do
             currentIndex = 2,
             currentMatches = S.fromList [Interval (0,2)]
           }
+    it "moves to the end state in the middle of a complex automaton" $ do
+      let first_state = ProcessingState {
+            possibleMatches = S.fromList [P {matchState = 7, startIndex = 0 },
+                                          P {matchState = 8, startIndex = 0 }],
+            currentIndex = 2,
+            currentMatches = S.empty
+          }
+      runAutomatonOnce yob_dog_automaton first_state 'g' `shouldBe`
+        ProcessingState {
+          possibleMatches = S.fromList [P {matchState = 0, startIndex = 3 }],
+          currentIndex = 3,
+          currentMatches = S.fromList [Interval (0,3)]
+        }
+
     it "moves to the end state on seeing the right character" $ do
       let almostEndState = ProcessingState {
             possibleMatches = S.fromList [P {matchState = 4, startIndex = 0 }],
