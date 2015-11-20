@@ -63,11 +63,12 @@ spec = do
             currentIndex = 1,
             currentMatches = S.empty
           }
-    it "moves to the next state on NOT seeing a negated character" $ do
+    it "moves to the next state(s) on NOT seeing a negated character" $ do
       runAutomatonOnce neg_automaton initialState 'g' `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 },
-                               P {matchState = 3, startIndex = 0 }],
+                               P {matchState = 3, startIndex = 0 },
+                               P {matchState = 5, startIndex = 0 }],
             currentIndex = 1,
             currentMatches = S.empty
           }
