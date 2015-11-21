@@ -40,7 +40,7 @@ data IsNegated = Negated | Unnegated deriving (Eq,Show)
 -- If I were really hardcore, each parsing stage would have its own type.
 -- But I'm not.
 data MaybeParsed =
-    Bare (Char, TokenType) |
+    Unparsed (Char, TokenType) |
     Parsed Token |
     -- Should not contain recursive PartiallyParsedGroups.
     -- TODO: Enforce this somehow? By adding another wrapper?
@@ -175,20 +175,20 @@ parse regex =
     regex
 
 forceParsed :: PartiallyParsedRegex -> ParsedRegex
-forceParsed (Bare (c,t):rest) = error $ "Could not parse char: " ++ [c]
+forceParsed (Unparsed (c,t):rest) = error $ "Could not parse char: " ++ [c]
 forceParsed (Parsed t:rest) = t:forceParsed rest
 forceParsed [] = []
 
 makeMaybeParsed :: TokenizedRegex -> PartiallyParsedRegex
-makeMaybeParsed = map Bare
+makeMaybeParsed = map Unparsed
 
 -- TODO: Refactor to make the parsing logic a bit less ugly
 parseEscapes :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseEscapes (Bare (_, Backslash):Bare (c, OtherChar):rest) =
+parseEscapes (Unparsed (_, Backslash):Unparsed (c, OtherChar):rest) =
     error ("Character '" ++ [c] ++ "' may not be escaped")
-parseEscapes (Bare (_, Backslash):Bare (c,_):rest) = Parsed (Single c) : parseEscapes rest
+parseEscapes (Unparsed (_, Backslash):Unparsed (c,_):rest) = Parsed (Single c) : parseEscapes rest
 -- This next case shouldn't happen since we parse escapes first
-parseEscapes (Bare (_, Backslash):_:rest) = error "Can't escape token"
+parseEscapes (Unparsed (_, Backslash):_:rest) = error "Can't escape token"
 parseEscapes (thing:rest) = thing:parseEscapes rest
 parseEscapes [] = []
 
@@ -198,7 +198,7 @@ parseGroups tokens = map (innerParseGroup . maybeNegate) (makeGroupPiles tokens)
 -- For each PartiallyParsed Group, if it starts with a carat,
 -- negates the group.
 maybeNegate :: MaybeParsed -> MaybeParsed
-maybeNegate (PartiallyParsedGroup ((Bare (_, Carat)):rest) Unnegated) =
+maybeNegate (PartiallyParsedGroup ((Unparsed (_, Carat)):rest) Unnegated) =
   PartiallyParsedGroup rest Negated
 maybeNegate other = other
 
@@ -214,10 +214,10 @@ makeGroupPiles tokens = final_parse
         grab_chars :: (LatestGroup,PartiallyParsedRegex) -> 
                           MaybeParsed ->
                               (LatestGroup,PartiallyParsedRegex)
-        grab_chars (NoGroup,parsed) (Bare (_,LBracket)) = (IncompleteGroup [],parsed)
-        grab_chars (_,parsed) (Bare (_,LBracket)) = error "Encountered [ inside group"
-        grab_chars (NoGroup,_) (Bare (_,RBracket)) = error "Encountered ] outside group"
-        grab_chars (IncompleteGroup group, parsed) (Bare (_,RBracket)) =
+        grab_chars (NoGroup,parsed) (Unparsed (_,LBracket)) = (IncompleteGroup [],parsed)
+        grab_chars (_,parsed) (Unparsed (_,LBracket)) = error "Encountered [ inside group"
+        grab_chars (NoGroup,_) (Unparsed (_,RBracket)) = error "Encountered ] outside group"
+        grab_chars (IncompleteGroup group, parsed) (Unparsed (_,RBracket)) =
             (NoGroup, parsed ++ [PartiallyParsedGroup group Unnegated])
         grab_chars (IncompleteGroup group, parsed) next_token =
             (IncompleteGroup (group ++ [next_token]), parsed)
@@ -236,31 +236,31 @@ innerParseGroup other = other
 
 
 parseRepeats :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseRepeats (Bare (c,Star):Parsed token:rest) = (Parsed (Repeated token)):parseRepeats rest
-parseRepeats (Bare (c,Plus):Parsed token:rest) = (Parsed (Repeated token)):Parsed token:parseRepeats rest
-parseRepeats (Bare (c,Star):_:rest) = error "Unexpected * after unparsed input"
-parseRepeats (Bare (c,Plus):_:rest) = error "Unexpected + after unparsed input"
-parseRepeats (Bare (c,Star):[]) = error "Unexpected * at beginning of input"
-parseRepeats (Bare (c,Plus):[]) = error "Unexpected + at beginning of input"
+parseRepeats (Unparsed (c,Star):Parsed token:rest) = (Parsed (Repeated token)):parseRepeats rest
+parseRepeats (Unparsed (c,Plus):Parsed token:rest) = (Parsed (Repeated token)):Parsed token:parseRepeats rest
+parseRepeats (Unparsed (c,Star):_:rest) = error "Unexpected * after unparsed input"
+parseRepeats (Unparsed (c,Plus):_:rest) = error "Unexpected + after unparsed input"
+parseRepeats (Unparsed (c,Star):[]) = error "Unexpected * at beginning of input"
+parseRepeats (Unparsed (c,Plus):[]) = error "Unexpected + at beginning of input"
 parseRepeats (other:rest) = other:parseRepeats rest
 parseRepeats [] = []
 
 parseWildcards :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseWildcards = map convertDots
     where convertDots :: MaybeParsed -> MaybeParsed
-          convertDots (Bare ('.',Dot)) = Parsed Wildcard
+          convertDots (Unparsed ('.',Dot)) = Parsed Wildcard
           convertDots other = other
 
 parseLeftovers :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseLeftovers = map convertChars
   where convertChars :: MaybeParsed -> MaybeParsed
-        convertChars (Bare (c, OtherChar)) = Parsed (Single c)
+        convertChars (Unparsed (c, OtherChar)) = Parsed (Single c)
         -- Let brackets, negations, and repeats pass through unchanged
-        convertChars (Bare (c, LBracket)) = Bare (c, LBracket)
-        convertChars (Bare (c, RBracket)) = Bare (c, RBracket)
-        convertChars (Bare (c, Carat)) = Bare (c, Carat)
-        convertChars (Bare (c, Star)) = Bare (c, Star)
-        convertChars (Bare (c, Plus)) = Bare (c, Plus)
+        convertChars (Unparsed (c, LBracket)) = Unparsed (c, LBracket)
+        convertChars (Unparsed (c, RBracket)) = Unparsed (c, RBracket)
+        convertChars (Unparsed (c, Carat)) = Unparsed (c, Carat)
+        convertChars (Unparsed (c, Star)) = Unparsed (c, Star)
+        convertChars (Unparsed (c, Plus)) = Unparsed (c, Plus)
         -- Let parsed tokens pass through unchanged
         convertChars (Parsed token) = Parsed token
         -- Expect not to see any other type of character (not strictly necessary)
