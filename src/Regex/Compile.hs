@@ -146,9 +146,10 @@ makeMiniAutomaton (Group tokens) = trace ("***********mini automatons for this g
     trace ("or on first: " ++ show (orAutomatons emptyAutomaton (head $ map makeMiniAutomaton tokens))) $
     trace ("first: " ++ show (head $ map makeMiniAutomaton tokens)) $
     foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton tokens
-makeMiniAutomaton (NegGroup tokens) = 
-  foldl orAutomatons emptyAutomaton $ map (makeMiniAutomaton . negate) tokens
-  where negate (Single c) = NegChar c
+makeMiniAutomaton (NoneOf tokens) = Automaton {
+  stateMap = insEdge (0, 1, T $ NoneOf tokens) $ insNodes [(0,()), (1,())] $ empty,
+  finalState = 1
+}
 makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
 makeMiniAutomaton (Repeated token) = error "makeMiniAutomaton not yet defined for repeated tokens"
 -- TODO: Think about having a smaller "SimpleToken" type that encompasses *just*
@@ -227,7 +228,7 @@ innerParseGroup (PartiallyParsedGroup token_tuples Unnegated) =
     Parsed (Group 
         (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
 innerParseGroup (PartiallyParsedGroup token_tuples Negated) =
-    Parsed (NegGroup
+    Parsed (NoneOf
         (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
 innerParseGroup other = other
 

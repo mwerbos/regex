@@ -73,7 +73,7 @@ spec = do
       let tokenized = [('[', LBracket), ('^', Carat),
                        ('y', OtherChar), ('d', OtherChar),
                        (']', RBracket), ('o', OtherChar)]
-      parse tokenized `shouldBe` [NegGroup [Single 'y', Single 'd'], Single 'o']
+      parse tokenized `shouldBe` [NoneOf [Single 'y', Single 'd'], Single 'o']
   describe "makeMiniAutomaton" $ do
     it "makes a mini automaton with a character class" $ do
       let token = Group [Single 'y', Single 'd']
@@ -106,14 +106,13 @@ spec = do
           }
       makeAutomaton parsed `shouldBe` simple_automaton
     it "builds an automaton with a negated character class" $ do
-      let parsed = [NegGroup [Single 'y', Single 'd'], Single 'o']
+      let parsed = [NoneOf [Single 'y', Single 'd'], Single 'o']
           simple_automaton = Automaton {
-            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,()), (7,())]
-                               [(0,2,Epsilon), (0,4,Epsilon),
-                                (2,3,T $ NegChar 'y'), (4,5,T $ NegChar 'd'),
-                                (3,1,Epsilon), (5,1,Epsilon),
-                                (1,6,Epsilon), (6,7,T $ Single 'o')],
-            finalState = 7
+            stateMap = mkGraph [(0,()), (1,()), (2,()), (3,())]
+                               [(0,1,T $ NoneOf [Single 'y', Single 'd']),
+                                (1,2,Epsilon),
+                                (2,3,T $ Single 'o')],
+            finalState = 3
           }
       makeAutomaton parsed `shouldBe` simple_automaton
     it "builds a longer automaton" $ do

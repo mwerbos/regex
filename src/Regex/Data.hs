@@ -17,7 +17,7 @@ data Token =
     Single Char |
     NegChar Char |
     Group [Token] |
-    NegGroup [Token] |
+    NoneOf [Token] |
     Or Token Token |
     Repeated Token |
     Wildcard
