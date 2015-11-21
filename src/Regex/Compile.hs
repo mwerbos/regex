@@ -90,16 +90,14 @@ addMiniAutomaton mini_graph graph = Automaton {
 -- Combines two regexes saying you can see either one of them
 orAutomatons :: Automaton -> Automaton -> Automaton
 orAutomatons first_aut second_aut 
-  | first_aut == emptyAutomaton = trace ("or'ing empty with " ++ show second_aut) $ second_aut
-  | second_aut == emptyAutomaton = trace ("or'ing empty with " ++ show first_aut) $ first_aut
+  | first_aut == emptyAutomaton = second_aut
+  | second_aut == emptyAutomaton = first_aut
   | otherwise = 
-  trace ("########## or'ing " ++ show first_aut ++ " with " ++ show second_aut) $
-  Automaton {
-    stateMap = 
-        trace ("got combined graph: " ++ show overall_graph ++ ", now adding e-transitions") $
-        add_epsilon_transitions overall_graph,
-    finalState = translate_base_graph_node 1
-  }
+      Automaton {
+        stateMap = 
+            add_epsilon_transitions overall_graph,
+        finalState = translate_base_graph_node 1
+      }
   where (overall_graph,
             (translate_base_graph_node,
              translate_first_graph_node,
@@ -109,8 +107,6 @@ orAutomatons first_aut second_aut
         base_graph = mkGraph [(0,()), (1,())] []
         -- No translation needed for nodes from the base graph
         add_epsilon_transitions overall_graph = 
-            trace ("adding epsilon transitions: " ++ show epsilon_edges) $
-            trace ("final state for first automaton: " ++ show (finalState first_aut)) $
             insEdges epsilon_edges overall_graph
         epsilon_edges = [(translate_base_graph_node 0, translate_first_graph_node 0, Epsilon),
                          (translate_base_graph_node 0, translate_second_graph_node 0, Epsilon),
@@ -142,18 +138,19 @@ makeMiniAutomaton (NegChar c) = Automaton {
   stateMap = insEdge (0, 1, T $ NegChar c) $ insNodes [(0,()), (1,())] $ empty,
   finalState = 1
 }
-makeMiniAutomaton (Group tokens) = trace ("***********mini automatons for this group: " ++ show (map makeMiniAutomaton tokens)) $
-    trace ("or on first: " ++ show (orAutomatons emptyAutomaton (head $ map makeMiniAutomaton tokens))) $
-    trace ("first: " ++ show (head $ map makeMiniAutomaton tokens)) $
+makeMiniAutomaton (Group tokens) = 
     foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton tokens
 makeMiniAutomaton (NoneOf tokens) = Automaton {
   stateMap = insEdge (0, 1, T $ NoneOf tokens) $ insNodes [(0,()), (1,())] $ empty,
   finalState = 1
 }
 makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
-makeMiniAutomaton (Repeated token) = connect_end_to_beginning $ makeMiniAutomaton token
-  where connect_end_to_beginning automaton =
-            automaton { stateMap = insEdge (finalState automaton, 0, Epsilon) (stateMap automaton) }
+makeMiniAutomaton (Repeated token) = connect_ends $ makeMiniAutomaton token
+  where connect_ends automaton = automaton {
+            stateMap = insEdge (finalState automaton, 0, Epsilon) $
+                       insEdge (0, finalState automaton, Epsilon) $
+                       (stateMap automaton)
+        }
 -- TODO: Think about having a smaller "SimpleToken" type that encompasses *just*
 -- the token types that can be placed on edges (Char, NegChar, Wildcard),
 -- and think about how Wildcard and NegChar affect matchesToken and whether I need to think
@@ -236,14 +233,16 @@ innerParseGroup other = other
 
 
 parseRepeats :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseRepeats (Unparsed (c,Star):Parsed token:rest) = (Parsed (Repeated token)):parseRepeats rest
-parseRepeats (Unparsed (c,Plus):Parsed token:rest) = (Parsed (Repeated token)):Parsed token:parseRepeats rest
-parseRepeats (Unparsed (c,Star):_:rest) = error "Unexpected * after unparsed input"
-parseRepeats (Unparsed (c,Plus):_:rest) = error "Unexpected + after unparsed input"
-parseRepeats (Unparsed (c,Star):[]) = error "Unexpected * at beginning of input"
-parseRepeats (Unparsed (c,Plus):[]) = error "Unexpected + at beginning of input"
+parseRepeats (Parsed token:Unparsed (c,Star):rest) =
+    (Parsed (Repeated token)):parseRepeats rest
+parseRepeats (Parsed token:Unparsed (c,Plus):rest) =
+    Parsed token:(Parsed (Repeated token)):parseRepeats rest
+parseRepeats (_:Unparsed (c,Star):rest) = error "Unexpected *"
+parseRepeats (_:Unparsed (c,Plus):rest) = error "Unexpected +"
+parseRepeats (Unparsed (c,Star):rest) = error "Unexpected *"
+parseRepeats (Unparsed (c,Plus):rest) = error "Unexpected +"
 parseRepeats (other:rest) = other:parseRepeats rest
-parseRepeats [] = []
+parseRepeats [] = trace ("Parsing repeats from empty list") []
 
 parseWildcards :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseWildcards = map convertDots

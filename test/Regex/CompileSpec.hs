@@ -12,9 +12,10 @@ spec :: Spec
 spec = do
   describe "processRegex" $ do
     it "processes a regex with a repeated token" $ do
-      processRegex (Regex "a+") `shouldBe` Automaton {
+      processRegex (Regex "a*") `shouldBe` Automaton {
         stateMap = mkGraph [(0,()), (1,())]
-                           [(0,1,T $ Single 'a'), (1,0,Epsilon)],
+                           [(0,1,T $ Single 'a'), (1,0,Epsilon),
+                            (0,1,Epsilon)],
         finalState = 1
       }
     it "correctly processes a regex with a negated character class" $ do
@@ -66,7 +67,7 @@ spec = do
       let regex = Regex "hi"
       tokenize regex `shouldBe` [('h', OtherChar), ('i', OtherChar)]
     it "tokenizes with a repeated character" $ do
-      tokenize (Regex "a+") `shouldBe` [('a', OtherChar), ('+', Plus)]
+      tokenize (Regex "a*") `shouldBe` [('a', OtherChar), ('*', Star)]
     it "tokenizes an expression with negated character class" $ do
       let regex = Regex "[^yd]o"
       tokenize regex `shouldBe` [('[', LBracket), ('^', Carat),
@@ -77,7 +78,7 @@ spec = do
       let tokenized = [('f', OtherChar), ('o', OtherChar), ('x', OtherChar)]
       parse tokenized `shouldBe` [Single 'f', Single 'o', Single 'x']
     it "parses with a repeated token" $ do
-      parse [('a', OtherChar), ('+', Plus)] `shouldBe` [Repeated (Single 'a')]
+      parse [('a', OtherChar), ('*', Star)] `shouldBe` [Repeated (Single 'a')]
     it "parses with a negated character class" $ do
       let tokenized = [('[', LBracket), ('^', Carat),
                        ('y', OtherChar), ('d', OtherChar),
@@ -85,7 +86,7 @@ spec = do
       parse tokenized `shouldBe` [NoneOf [Single 'y', Single 'd'], Single 'o']
   describe "parseRepeats" $ do
     it "parses with a repeated token" $ do
-      parseRepeats [Parsed (Single 'a'), Unparsed ('+', Plus)] `shouldBe`
+      parseRepeats [Parsed (Single 'a'), Unparsed ('*', Star)] `shouldBe`
           [Parsed (Repeated (Single 'a'))]
 
   describe "makeMiniAutomaton" $ do
