@@ -65,6 +65,8 @@ spec = do
     it "tokenizes a simple expression" $ do
       let regex = Regex "hi"
       tokenize regex `shouldBe` [('h', OtherChar), ('i', OtherChar)]
+    it "tokenizes with a repeated character" $ do
+      tokenize (Regex "a+") `shouldBe` [('a', OtherChar), ('+', Plus)]
     it "tokenizes an expression with negated character class" $ do
       let regex = Regex "[^yd]o"
       tokenize regex `shouldBe` [('[', LBracket), ('^', Carat),
@@ -74,6 +76,8 @@ spec = do
     it "parses a simple expression" $ do
       let tokenized = [('f', OtherChar), ('o', OtherChar), ('x', OtherChar)]
       parse tokenized `shouldBe` [Single 'f', Single 'o', Single 'x']
+    it "parses with a repeated token" $ do
+      parse [('a', OtherChar), ('+', Plus)] `shouldBe` [Repeated (Single 'a')]
     it "parses with a negated character class" $ do
       let tokenized = [('[', LBracket), ('^', Carat),
                        ('y', OtherChar), ('d', OtherChar),
