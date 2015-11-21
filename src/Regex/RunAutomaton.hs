@@ -8,6 +8,7 @@ import Data.Graph.Inductive.PatriciaTree(Gr(..))
 import Data.Graph.Inductive.Graph(lab,lneighbors,matchAny,labfilter,Node)
 import Data.Maybe(catMaybes)
 import qualified Data.Set as S
+import Data.List (maximumBy,minimumBy,groupBy)
 
 import Debug.Trace (trace) -- TODO remove
 
@@ -15,7 +16,13 @@ import Debug.Trace (trace) -- TODO remove
 -- (consisting of *all* possible matches) and removes all the matches that don't
 -- satisfy the "non-overlapping, greediest possible" criteria.
 weedMatches :: [Interval] -> [Interval]
-weedMatches = id -- TODO
+weedMatches =
+    map (minimumBy compare_starting_place) . groupBy ending_place_eq .
+    map (maximumBy compare_ending_place) . groupBy starting_place_eq
+  where starting_place_eq (Interval (a,_)) (Interval (c,_)) = a == c
+        ending_place_eq (Interval (_,b)) (Interval (_,d)) = b == d
+        compare_starting_place (Interval (a,_)) (Interval (c,_)) = a `compare` c
+        compare_ending_place (Interval (_,b)) (Interval (_,d)) = b `compare` d
 
 runAutomaton :: Automaton -> String -> [Interval]
 runAutomaton automaton string = S.toList $ currentMatches end_state
