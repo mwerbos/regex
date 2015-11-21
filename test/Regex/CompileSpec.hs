@@ -11,6 +11,12 @@ nLengthNodes n = take n $ zip [0..] (repeat ())
 spec :: Spec
 spec = do
   describe "processRegex" $ do
+    it "processes a regex with a repeated token" $ do
+      processRegex (Regex "a+") `shouldBe` Automaton {
+        stateMap = mkGraph [(0,()), (1,())]
+                           [(0,1,T $ Single 'a'), (1,0,Epsilon)],
+        finalState = 1
+      }
     it "correctly processes a regex with a negated character class" $ do
       let regex = Regex "[^yd]o"
           simple_automaton = Automaton {
