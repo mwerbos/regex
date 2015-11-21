@@ -18,6 +18,16 @@ spec = do
                             (0,1,Epsilon)],
         finalState = 1
       }
+    it "processes a more complex regex with a repeated token" $ do
+      processRegex (Regex "ba+c") `shouldBe` Automaton {
+        stateMap = mkGraph (nLengthNodes 8)
+                           [(0,1,T $ Single 'b'), (1,2,Epsilon),
+                            (2,3,T $ Single 'a'), (3,4,Epsilon),
+                            (4,5,T $ Single 'a'), (5,6,Epsilon),
+                            (4,5,Epsilon),(5,4,Epsilon),
+                            (6,7,T $ Single 'c')],
+        finalState = 7
+      }
     it "correctly processes a regex with a negated character class" $ do
       let regex = Regex "[^yd]o"
           simple_automaton = Automaton {
