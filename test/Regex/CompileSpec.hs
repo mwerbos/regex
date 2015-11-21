@@ -83,6 +83,11 @@ spec = do
                        ('y', OtherChar), ('d', OtherChar),
                        (']', RBracket), ('o', OtherChar)]
       parse tokenized `shouldBe` [NoneOf [Single 'y', Single 'd'], Single 'o']
+  describe "parseRepeats" $ do
+    it "parses with a repeated token" $ do
+      parseRepeats [Parsed (Single 'a'), Unparsed ('+', Plus)] `shouldBe`
+          [Parsed (Repeated (Single 'a'))]
+
   describe "makeMiniAutomaton" $ do
     it "makes a mini automaton with a character class" $ do
       let token = Group [Single 'y', Single 'd']

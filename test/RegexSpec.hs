@@ -144,7 +144,7 @@ spec = do
         let text = "i am dooog"
             regex = Regex "do++g"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "Unexpected + after unparsed input"
+            errorCall "Unexpected +"
 
       it "doesn't match 0 instances of repeated class" $ do
         let text = "i am dg"
