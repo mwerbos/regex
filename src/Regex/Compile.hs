@@ -151,7 +151,9 @@ makeMiniAutomaton (NoneOf tokens) = Automaton {
   finalState = 1
 }
 makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
-makeMiniAutomaton (Repeated token) = error "makeMiniAutomaton not yet defined for repeated tokens"
+makeMiniAutomaton (Repeated token) = connect_end_to_beginning $ makeMiniAutomaton token
+  where connect_end_to_beginning automaton =
+            automaton { stateMap = insEdge (finalState automaton, 0, Epsilon) (stateMap automaton) }
 -- TODO: Think about having a smaller "SimpleToken" type that encompasses *just*
 -- the token types that can be placed on edges (Char, NegChar, Wildcard),
 -- and think about how Wildcard and NegChar affect matchesToken and whether I need to think
