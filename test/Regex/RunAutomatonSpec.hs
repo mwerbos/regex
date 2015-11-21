@@ -120,7 +120,8 @@ spec = do
           }
       runAutomatonOnce yob_dog_automaton first_state 'g' `shouldBe`
         ProcessingState {
-          possibleMatches = S.fromList [P {matchState = 0, startIndex = 3 }],
+          possibleMatches = S.fromList [P {matchState = 0, startIndex = 3 },
+                                        P {matchState = 11, startIndex = 0 }],
           currentIndex = 3,
           currentMatches = S.fromList [Interval (0,3)]
         }

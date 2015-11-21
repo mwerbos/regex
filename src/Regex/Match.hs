@@ -6,4 +6,5 @@ matchesToken :: Char -> Token -> Bool
 matchesToken c (Single token_char) = c == token_char
 matchesToken c (NegChar token_char) = c /= token_char
 matchesToken c Wildcard = True
+matchesToken c (NoneOf tokens) = foldl (&&) True $ map (not . matchesToken c) tokens
 matchesToken _ t = error ("matchesToken undefined for this token: " ++ show t)
