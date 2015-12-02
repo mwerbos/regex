@@ -15,6 +15,7 @@ data TokenType =
     Carat |
     Star |
     Plus |
+    RParen | LParen |
     OtherChar
   deriving (Eq,Show)
 
@@ -24,6 +25,8 @@ tokenType :: Char -> TokenType
 tokenType '\\' = Backslash
 tokenType '[' = LBracket
 tokenType ']' = RBracket
+tokenType '(' = LParen
+tokenType ')' = RParen
 tokenType '.' = Dot 
 tokenType '^' = Carat
 tokenType '*' = Star
