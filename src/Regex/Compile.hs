@@ -15,7 +15,7 @@ data TokenType =
     Carat |
     Star |
     Plus |
-    RParen | LParen |
+    RParen | LParen | Pipe |
     OtherChar
   deriving (Eq,Show)
 

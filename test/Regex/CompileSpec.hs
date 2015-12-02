@@ -94,6 +94,9 @@ spec = do
                        ('y', OtherChar), ('d', OtherChar),
                        (']', RBracket), ('o', OtherChar)]
       parse tokenized `shouldBe` [NoneOf [Single 'y', Single 'd'], Single 'o']
+    it "parses a parenthesis group correctly" $ do
+      let tokenized = [('(', LParen), ('a', OtherChar), ('|', Pipe), ('b', OtherChar), (')', RParen)]
+      parse tokenized `shouldBe` [Or (Single 'a') (Single 'b')]
   describe "parseRepeats" $ do
     it "parses with a repeated token" $ do
       parseRepeats [Parsed (Single 'a'), Unparsed ('*', Star)] `shouldBe`
