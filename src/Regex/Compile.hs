@@ -15,6 +15,7 @@ data TokenType =
     Carat |
     Star |
     Plus |
+    LParen | RParen | Pipe |
     OtherChar
   deriving (Eq,Show)
 
@@ -28,6 +29,9 @@ tokenType '.' = Dot
 tokenType '^' = Carat
 tokenType '*' = Star
 tokenType '+' = Plus 
+tokenType '(' = LParen
+tokenType ')' = RParen
+tokenType '|' = Pipe
 tokenType _ = OtherChar
 
 type TokenizedRegex = [(Char, TokenType)]
