@@ -79,7 +79,7 @@ spec = do
         let text = "I am [Duke of Aragon.\\"
             regex = Regex "n.\\"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "parse error when running parseLeftovers: Bare ('\\',Backslash)"
+            errorCall "parse error when running parseLeftovers: Bare ('\\\\',Backslash)"
 
       it "fails on a wrongly escaped character" $ do
         let text = "I am [Duke of Aragon.\\"
@@ -210,5 +210,13 @@ spec = do
     context "matching with char groups" $ do
       it "uses a character group 2 long" $ do
         let text = "abcbcd"
-            regex = Regex "abc+d"
+            regex = Regex "a(bc)+d"
         matchExpression regex text `shouldBe` [Interval (0,6)]
+      it "uses a character group with an or" $ do
+        let text = "ahjd abcd"
+            regex = Regex "a(bc|hj)d"
+        matchExpression regex text `shouldBe` [Interval (0,4), Interval (5,9)]
+      it "uses a character group with a multi-or" $ do
+        let text = "ahjd abcd azzd"
+            regex = Regex "a(bc|hj|zz)d"
+        matchExpression regex text `shouldBe` [Interval (0,4), Interval (5,9), Interval (10,14)]

@@ -144,7 +144,8 @@ makeMiniAutomaton (NoneOf tokens) = Automaton {
   stateMap = insEdge (0, 1, T $ NoneOf tokens) $ insNodes [(0,()), (1,())] $ empty,
   finalState = 1
 }
-makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
+makeMiniAutomaton (Or t1 t2s) = orAutomatons (makeMiniAutomaton t1)
+                                             (foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton t2s)
 makeMiniAutomaton (Repeated token) = connect_ends $ makeMiniAutomaton token
   where connect_ends automaton = automaton {
             stateMap = insEdge (finalState automaton, 0, Epsilon) $

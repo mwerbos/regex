@@ -18,7 +18,7 @@ data Token =
     NegChar Char |
     Group [Token] |
     NoneOf [Token] |
-    Or Token Token |
+    Or Token [Token] |
     Repeated Token |
     Wildcard
   deriving (Show, Eq, Ord)
