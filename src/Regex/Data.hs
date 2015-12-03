@@ -12,15 +12,19 @@ data Interval = Interval (Int, Int) deriving (Show, Eq, Ord)
 -- (a transition requiring 0 characters to match)
 data Edge = T Token | Epsilon deriving (Show, Eq, Ord)
 
--- A regex token
-data Token =
+data SimpleToken =
     Single Char |
     NegChar Char |
-    Group [Token] |
-    NoneOf [Token] |
-    Or Token [Token] |
-    Repeated Token |
     Wildcard
+  deriving (Show, Eq, Ord)
+
+-- A regex token
+data Token =
+    Simple SimpleToken |
+    Group [SimpleToken] |
+    NoneOf [SimpleToken] |
+    Or [Token] [[Token]] |
+    Repeated Token
   deriving (Show, Eq, Ord)
 
 -- A nondeterministic finite automaton

@@ -252,13 +252,13 @@ parseRepeats [] = trace ("Parsing repeats from empty list") []
 parseWildcards :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseWildcards = map convertDots
     where convertDots :: MaybeParsed -> MaybeParsed
-          convertDots (Unparsed ('.',Dot)) = Parsed Wildcard
+          convertDots (Unparsed ('.',Dot)) = Parsed (Simple Wildcard)
           convertDots other = other
 
 parseLeftovers :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseLeftovers = map convertChars
   where convertChars :: MaybeParsed -> MaybeParsed
-        convertChars (Unparsed (c, OtherChar)) = Parsed (Single c)
+        convertChars (Unparsed (c, OtherChar)) = Parsed (Simple $ Single c)
         -- Let brackets, negations, and repeats pass through unchanged
         convertChars (Unparsed (c, LBracket)) = Unparsed (c, LBracket)
         convertChars (Unparsed (c, RBracket)) = Unparsed (c, RBracket)
