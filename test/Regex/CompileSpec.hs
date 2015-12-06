@@ -105,7 +105,7 @@ spec = do
 
   describe "makeMiniAutomaton" $ do
     it "makes a mini automaton with a character class" $ do
-      let token = Group [Single 'y', Single 'd']
+      let token = CharacterClass [Single 'y', Single 'd']
           simple_automaton = Automaton {
             stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,())]
                                [(0,2,Epsilon), (0,4,Epsilon),
@@ -124,7 +124,7 @@ spec = do
           }
       makeAutomaton parsed `shouldBe` simple_automaton
     it "builds an automaton with a character class" $ do
-      let parsed = [Group [Single 'y', Single 'd'], Single 'o']
+      let parsed = [CharacterClass [Single 'y', Single 'd'], Single 'o']
           simple_automaton = Automaton {
             stateMap = mkGraph [(0,()), (1,()), (2,()), (3,()), (4,()), (5,()), (6,()), (7,())]
                                [(0,2,Epsilon), (0,4,Epsilon),

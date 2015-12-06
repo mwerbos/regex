@@ -48,9 +48,9 @@ data IsNegated = Negated | Unnegated deriving (Eq,Show)
 data MaybeParsed =
     Unparsed (Char, TokenType) |
     Parsed Token |
-    -- Should not contain recursive PartiallyParsedGroups.
+    -- Should not contain recursive PartiallyParsedCharacterClasses.
     -- TODO: Enforce this somehow? By adding another wrapper?
-    PartiallyParsedGroup [MaybeParsed] IsNegated
+    PartiallyParsedCharacterClass [MaybeParsed] IsNegated
   deriving (Eq,Show)
 
 type PartiallyParsedRegex = [MaybeParsed]
@@ -144,7 +144,7 @@ makeMiniAutomaton (NegChar c) = Automaton {
   stateMap = insEdge (0, 1, T $ NegChar c) $ insNodes [(0,()), (1,())] $ empty,
   finalState = 1
 }
-makeMiniAutomaton (Group tokens) = 
+makeMiniAutomaton (CharacterClass tokens) = 
     foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton tokens
 makeMiniAutomaton (NoneOf tokens) = Automaton {
   stateMap = insEdge (0, 1, T $ NoneOf tokens) $ insNodes [(0,()), (1,())] $ empty,
@@ -172,7 +172,7 @@ parse :: TokenizedRegex -> ParsedRegex
 parse regex =
    (forceParsed .
     parseRepeats .
-    parseGroups .
+    parseCharacterClasses .
     parseLeftovers .
     parseWildcards .
     parseEscapes .
@@ -197,47 +197,47 @@ parseEscapes (Unparsed (_, Backslash):_:rest) = error "Can't escape token"
 parseEscapes (thing:rest) = thing:parseEscapes rest
 parseEscapes [] = []
 
-parseGroups :: PartiallyParsedRegex -> PartiallyParsedRegex
-parseGroups tokens = map (innerParseGroup . maybeNegate) (makeGroupPiles tokens)
+parseCharacterClasses :: PartiallyParsedRegex -> PartiallyParsedRegex
+parseCharacterClasses tokens = map (innerParseCharacterClass . maybeNegate) (makeCharacterClassPiles tokens)
 
--- For each PartiallyParsed Group, if it starts with a carat,
+-- For each PartiallyParsed CharacterClass, if it starts with a carat,
 -- negates the group.
 maybeNegate :: MaybeParsed -> MaybeParsed
-maybeNegate (PartiallyParsedGroup ((Unparsed (_, Carat)):rest) Unnegated) =
-  PartiallyParsedGroup rest Negated
+maybeNegate (PartiallyParsedCharacterClass ((Unparsed (_, Carat)):rest) Unnegated) =
+  PartiallyParsedCharacterClass rest Negated
 maybeNegate other = other
 
--- Looks for [ and ] and just puts everything between them in a PartiallyParsedGroup.
+-- Looks for [ and ] and just puts everything between them in a PartiallyParsedCharacterClass.
 
-data LatestGroup = NoGroup | IncompleteGroup [MaybeParsed] deriving Eq
-makeGroupPiles :: PartiallyParsedRegex -> PartiallyParsedRegex
-makeGroupPiles tokens = final_parse
-  where final_parse = if last_group == NoGroup
+data LatestCharacterClass = NoCharacterClass | IncompleteCharacterClass [MaybeParsed] deriving Eq
+makeCharacterClassPiles :: PartiallyParsedRegex -> PartiallyParsedRegex
+makeCharacterClassPiles tokens = final_parse
+  where final_parse = if last_group == NoCharacterClass
                       then parsed_regex
                       else error "Expected ] before end of regex"
-        (last_group, parsed_regex) = foldl grab_chars (NoGroup,[]) tokens
-        grab_chars :: (LatestGroup,PartiallyParsedRegex) -> 
+        (last_group, parsed_regex) = foldl grab_chars (NoCharacterClass,[]) tokens
+        grab_chars :: (LatestCharacterClass,PartiallyParsedRegex) -> 
                           MaybeParsed ->
-                              (LatestGroup,PartiallyParsedRegex)
-        grab_chars (NoGroup,parsed) (Unparsed (_,LBracket)) = (IncompleteGroup [],parsed)
+                              (LatestCharacterClass,PartiallyParsedRegex)
+        grab_chars (NoCharacterClass,parsed) (Unparsed (_,LBracket)) = (IncompleteCharacterClass [],parsed)
         grab_chars (_,parsed) (Unparsed (_,LBracket)) = error "Encountered [ inside group"
-        grab_chars (NoGroup,_) (Unparsed (_,RBracket)) = error "Encountered ] outside group"
-        grab_chars (IncompleteGroup group, parsed) (Unparsed (_,RBracket)) =
-            (NoGroup, parsed ++ [PartiallyParsedGroup group Unnegated])
-        grab_chars (IncompleteGroup group, parsed) next_token =
-            (IncompleteGroup (group ++ [next_token]), parsed)
-        grab_chars (NoGroup, parsed) next_token = (NoGroup, parsed ++ [next_token])
+        grab_chars (NoCharacterClass,_) (Unparsed (_,RBracket)) = error "Encountered ] outside group"
+        grab_chars (IncompleteCharacterClass group, parsed) (Unparsed (_,RBracket)) =
+            (NoCharacterClass, parsed ++ [PartiallyParsedCharacterClass group Unnegated])
+        grab_chars (IncompleteCharacterClass group, parsed) next_token =
+            (IncompleteCharacterClass (group ++ [next_token]), parsed)
+        grab_chars (NoCharacterClass, parsed) next_token = (NoCharacterClass, parsed ++ [next_token])
 
 -- If it's a group, parses the characters inside the group.
 -- Only wildcards and escapes are allowed.
-innerParseGroup :: MaybeParsed -> MaybeParsed
-innerParseGroup (PartiallyParsedGroup token_tuples Unnegated) =
-    Parsed (Group 
+innerParseCharacterClass :: MaybeParsed -> MaybeParsed
+innerParseCharacterClass (PartiallyParsedCharacterClass token_tuples Unnegated) =
+    Parsed (CharacterClass 
         (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
-innerParseGroup (PartiallyParsedGroup token_tuples Negated) =
+innerParseCharacterClass (PartiallyParsedCharacterClass token_tuples Negated) =
     Parsed (NoneOf
         (forceParsed $ parseLeftovers $ parseEscapes token_tuples))
-innerParseGroup other = other
+innerParseCharacterClass other = other
 
 
 parseRepeats :: PartiallyParsedRegex -> PartiallyParsedRegex
