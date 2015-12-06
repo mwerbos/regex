@@ -212,6 +212,10 @@ spec =
         let text = "abcbcd"
             regex = Regex "a(bc)+d"
         matchExpression regex text `shouldBe` [Interval (0,6)]
+      it "uses a character group with *" $ do
+        let text = "ad abcd abcbcd acd"
+            regex = Regex "a(bc)*d"
+        matchExpression regex text `shouldBe` [Interval (0,2), Interval (3,7), Interval (8,14)]
       it "uses a character group with an or" $ do
         let text = "ahjd abcd"
             regex = Regex "a(bc|hj)d"
@@ -220,3 +224,7 @@ spec =
         let text = "ahjd abcd azzd"
             regex = Regex "a(bc|hj|zz)d"
         matchExpression regex text `shouldBe` [Interval (0,4), Interval (5,9), Interval (10,14)]
+      it "allows character class inside a character group" $ do
+        let text = "acdy aby ahdy"
+            regex = Regex "a([^bc]d|b)y"
+        matchExpression regex text `shouldBe` [Interval (5,8), Interval (9,13)]
