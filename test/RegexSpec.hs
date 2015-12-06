@@ -91,13 +91,13 @@ spec = do
         let text = "I am ]Duke of Aragon.\\"
             regex = Regex "][\\]\\[]"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "Encountered ] outside group"
+            errorCall "Encountered ] outside character class"
 
       it "fails on surprising [ character" $ do
         let text = "I am Duke of Aragon.\\"
             regex = Regex "[[Duke"
         evaluate (matchExpression regex text) `shouldThrow`
-            errorCall "Encountered [ inside group"
+            errorCall "Encountered [ inside character class"
 
       it "treats unescaped carats not at the beginning of the character class as an error" $ do
         let text = "Duke of Aragon"
