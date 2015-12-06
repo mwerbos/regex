@@ -58,18 +58,18 @@ spec :: Spec
 spec = do
   describe "runAutomaton" $ do
     it "runs a small automaton on a short string" $
-      runAutomaton simple_automaton "the fox was " `shouldBe` [Interval (4, 7)]
+      runAutomaton simpleAutomaton "the fox was " `shouldBe` [Interval (4, 7)]
     it "runs the automaton on the minimal string" $
-      runAutomaton simple_automaton "fox" `shouldBe` [Interval (0, 3)]
+      runAutomaton simpleAutomaton "fox" `shouldBe` [Interval (0, 3)]
     it "runs the automaton on the a slightly less minimal string" $
-      runAutomaton simple_automaton " fox" `shouldBe` [Interval (1, 4)]
+      runAutomaton simpleAutomaton " fox" `shouldBe` [Interval (1, 4)]
 
     it "runs an automaton with multiple character classes" $
       runAutomaton yobDogAutomaton "dog" `shouldBe` [Interval (0, 3)]
 
   describe "runAutomatonOnce" $ do
     it "moves to the next state on seeing the right character" $
-      runAutomatonOnce simple_automaton initialState 'f' `shouldBe`
+      runAutomatonOnce simpleAutomaton initialState 'f' `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 },
                                           P {matchState = 2, startIndex = 0 },
@@ -132,20 +132,20 @@ spec = do
             currentIndex = 1,
             currentMatches = S.empty
           }
-      runAutomatonOnce simple_automaton almostEndState 'x' `shouldBe`
+      runAutomatonOnce simpleAutomaton almostEndState 'x' `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 2 }],
             currentIndex = 2,
             currentMatches = S.fromList [Interval (0, 2)]
           }
     it "does not move on after seeing a wrong character" $
-      runAutomatonOnce simple_automaton initialState 'r' `shouldBe`
+      runAutomatonOnce simpleAutomaton initialState 'r' `shouldBe`
           initialState { possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 }],
                          currentIndex = 1 }
 
   describe "runStatesOnce" $ do
     it "runs a small automaton on a single character" $
-      runStatesOnce simple_automaton 'f' initialState `shouldBe`
+      runStatesOnce simpleAutomaton 'f' initialState `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 1, startIndex = 0 },
                                           P {matchState = 2, startIndex = 0 }],
@@ -153,7 +153,7 @@ spec = do
             currentMatches = S.empty 
           }
     it "does not move on after seeing a wrong character" $
-      runStatesOnce simple_automaton 'r' initialState `shouldBe`
+      runStatesOnce simpleAutomaton 'r' initialState `shouldBe`
           initialState { possibleMatches = S.empty }
     it "moves on after seeing an or'ed character" $ do
       let first_state = ProcessingState {
@@ -191,14 +191,14 @@ spec = do
 
   describe "runNonEpsilonMoves" $ do
     it "runs a small automaton on a single character" $
-      runNonEpsilonMoves simple_automaton 'f' initialState `shouldBe`
+      runNonEpsilonMoves simpleAutomaton 'f' initialState `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 1, startIndex = 0 }],
             currentIndex = 0,
             currentMatches = S.empty
           }
     it "does not move on after seeing a wrong character" $
-      runNonEpsilonMoves simple_automaton 'r' initialState `shouldBe`
+      runNonEpsilonMoves simpleAutomaton 'r' initialState `shouldBe`
           initialState { possibleMatches = S.empty }
 
   describe "popFinalStates" $

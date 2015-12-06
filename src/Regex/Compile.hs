@@ -4,7 +4,7 @@ import Regex.Data
 import Regex.Util
 import Data.Graph.Inductive(empty,Gr,insNodes,insEdge,insEdges,mkGraph,Node)
 import qualified Data.Map as M
-import Data.Maybe (fromJust, isJust)
+import Data.Maybe (fromMaybe)
 
 import Debug.Trace (trace) -- TODO remove
 
@@ -140,17 +140,17 @@ combineThreeGraphs (one, two, three) =
 
 makeMiniAutomaton :: Token -> Automaton
 makeMiniAutomaton (Single c) = Automaton {
-  stateMap = insEdge (0, 1, T Single c) $ insNodes [(0,()), (1,())] empty,
+  stateMap = insEdge (0, 1, T $ Single c) $ insNodes [(0,()), (1,())] empty,
   finalState = 1
 }
 makeMiniAutomaton (NegChar c) = Automaton {
-  stateMap = insEdge (0, 1, T NegChar c) $ insNodes [(0,()), (1,())] empty,
+  stateMap = insEdge (0, 1, T $ NegChar c) $ insNodes [(0,()), (1,())] empty,
   finalState = 1
 }
 makeMiniAutomaton (CharacterClass tokens) = 
     foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton tokens
 makeMiniAutomaton (NoneOf tokens) = Automaton {
-  stateMap = insEdge (0, 1, T NoneOf tokens) $ insNodes [(0,()), (1,())] empty,
+  stateMap = insEdge (0, 1, T $ NoneOf tokens) $ insNodes [(0,()), (1,())] empty,
   finalState = 1
 }
 makeMiniAutomaton (Or regex1 regex2s) =
