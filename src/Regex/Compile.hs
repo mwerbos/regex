@@ -224,7 +224,7 @@ makeGroupPiles tokens = final_parse
         grab_tokens (NoGroup, parsed) other_token = (NoGroup, parsed ++ [other_token])
 
         grab_tokens (GroupBeforeFirstElem tokens, parsed) (Unparsed (_,Pipe)) =
-            (GroupAfterFirstElem tokens [], parsed)
+            (GroupAfterFirstElem tokens [[]], parsed)
         grab_tokens (GroupBeforeFirstElem tokens,parsed) (Unparsed (_,RParen)) =
             (NoGroup, parsed ++ [PartiallyParsedGroup tokens []])
         grab_tokens (GroupBeforeFirstElem tokens, parsed) other_token =
@@ -238,9 +238,9 @@ makeGroupPiles tokens = final_parse
             (GroupAfterFirstElem regex (add_to_last other_token regexes), parsed)
 
         add_to_last :: Show a => a -> [[a]] -> [[a]]
-        add_to_last x xss = trace ("adding " ++ show x ++ " to " ++ show xss) $
+        add_to_last x xss = 
             all_but_last xss ++ [last xss ++ [x]]
-        all_but_last :: [a] -> [a]
+        all_but_last :: Show a => [a] -> [a]
         all_but_last (x:y:xs) = x:all_but_last (y:xs)
         all_but_last [x] = []
         all_but_last [] = error "encountered group section with no elements"
