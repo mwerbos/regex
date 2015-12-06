@@ -2,7 +2,7 @@ module Regex.Compile where
 
 import Regex.Data
 import Regex.Util
-import Data.Graph.Inductive(empty,Gr(..),insNodes,insEdge,insEdges,mkGraph,Node)
+import Data.Graph.Inductive(empty,Gr,insNodes,insEdge,insEdges,mkGraph,Node)
 import qualified Data.Map as M
 import Data.Maybe (fromJust, isJust)
 
@@ -15,7 +15,7 @@ data TokenType =
     Carat |
     Star |
     Plus |
-    RParen | LParen | Pipe |
+    LParen | RParen | Pipe |
     OtherChar
   deriving (Eq,Show)
 
@@ -31,6 +31,9 @@ tokenType '.' = Dot
 tokenType '^' = Carat
 tokenType '*' = Star
 tokenType '+' = Plus 
+tokenType '(' = LParen
+tokenType ')' = RParen
+tokenType '|' = Pipe
 tokenType _ = OtherChar
 
 type TokenizedRegex = [(Char, TokenType)]
@@ -147,7 +150,9 @@ makeMiniAutomaton (NoneOf tokens) = Automaton {
   stateMap = insEdge (0, 1, T $ NoneOf tokens) $ insNodes [(0,()), (1,())] $ empty,
   finalState = 1
 }
-makeMiniAutomaton (Or t1 t2) = orAutomatons (makeMiniAutomaton t1) (makeMiniAutomaton t2)
+makeMiniAutomaton (Or regex1 regex2s) =
+    orAutomatons (makeAutomaton regex1)
+        (foldl orAutomatons emptyAutomaton $ map makeAutomaton regex2s)
 makeMiniAutomaton (Repeated token) = connect_ends $ makeMiniAutomaton token
   where connect_ends automaton = automaton {
             stateMap = insEdge (finalState automaton, 0, Epsilon) $
@@ -231,7 +236,7 @@ innerParseGroup (PartiallyParsedGroup token_tuples Unnegated) =
         (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
 innerParseGroup (PartiallyParsedGroup token_tuples Negated) =
     Parsed (NoneOf
-        (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
+        (forceParsed $ parseLeftovers $ parseEscapes token_tuples))
 innerParseGroup other = other
 
 
@@ -250,7 +255,7 @@ parseRepeats [] = trace ("Parsing repeats from empty list") []
 parseWildcards :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseWildcards = map convertDots
     where convertDots :: MaybeParsed -> MaybeParsed
-          convertDots (Unparsed ('.',Dot)) = Parsed Wildcard
+          convertDots (Unparsed ('.',Dot)) = Parsed (Wildcard)
           convertDots other = other
 
 parseLeftovers :: PartiallyParsedRegex -> PartiallyParsedRegex
