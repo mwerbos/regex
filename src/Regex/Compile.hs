@@ -320,6 +320,9 @@ parseLeftovers = map convertChars
         -- Let brackets, negations, and repeats pass through unchanged
         convertChars (Unparsed (c, LBracket)) = Unparsed (c, LBracket)
         convertChars (Unparsed (c, RBracket)) = Unparsed (c, RBracket)
+        convertChars (Unparsed (c, LParen)) = Unparsed (c, LParen)
+        convertChars (Unparsed (c, RParen)) = Unparsed (c, RParen)
+        convertChars (Unparsed (c, Pipe)) = Unparsed (c, Pipe)
         convertChars (Unparsed (c, Carat)) = Unparsed (c, Carat)
         convertChars (Unparsed (c, Star)) = Unparsed (c, Star)
         convertChars (Unparsed (c, Plus)) = Unparsed (c, Plus)

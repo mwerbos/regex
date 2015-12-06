@@ -97,6 +97,16 @@ spec = do
       let tokenized = [('(', LParen), ('a', OtherChar), ('|', Pipe),
                        ('b', OtherChar), (')', RParen)]
       parse tokenized `shouldBe` [Or [Single 'a'] [[Single 'b']]]
+    it "has correct breakdown in when it parses a group" $ do
+      let tokenized = [('(', LParen), ('a', OtherChar), ('|', Pipe),
+                       ('b', OtherChar), (')', RParen)]
+          partially_parsed = [Unparsed ('(', LParen), Parsed (Single 'a'),
+                              Unparsed ('|', Pipe), Parsed (Single 'b'),
+                              Unparsed (')', RParen)]
+      (parseCharacterClasses . parseLeftovers . parseWildcards . parseEscapes . makeMaybeParsed)
+          tokenized `shouldBe` partially_parsed
+      (forceParsed . parseRepeats . parseGroups) partially_parsed
+          `shouldBe` [Or [Single 'a'] [[Single 'b']]]
   describe "parseGroups" $
     it "parses with a simple group" $ do
       let partially_parsed = [Unparsed ('(', LParen), Unparsed ('a', OtherChar),
