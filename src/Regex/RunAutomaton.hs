@@ -49,23 +49,23 @@ initialState = ProcessingState {
 runAutomatonOnce :: Automaton -> ProcessingState -> Char -> ProcessingState
 runAutomatonOnce automaton state char =
     addInitialState $
-    (popFinalStates (finalState automaton)) $
+    popFinalStates (finalState automaton) $
     incrementIndex (runStatesOnce automaton char state)
         -- First get new states by running the automaton
         -- Then pop any final states onto the intervals list
 
 addInitialState :: ProcessingState -> ProcessingState
 addInitialState state = state {
-  possibleMatches = S.insert (P { matchState = 0, startIndex = currentIndex state })
+  possibleMatches = S.insert P { matchState = 0, startIndex = currentIndex state }
                              (possibleMatches state)
 }
 
 incrementIndex :: ProcessingState -> ProcessingState
-incrementIndex state = state { currentIndex = (currentIndex state) + 1 }
+incrementIndex state = state { currentIndex = currentIndex state + 1 }
 
 -- Runs the automaton over every current possible match, with the given character
 runStatesOnce :: Automaton -> Char -> ProcessingState -> ProcessingState
-runStatesOnce aut c st = (runEpsilonMoves aut . runNonEpsilonMoves aut c . runEpsilonMoves aut) st
+runStatesOnce aut c = runEpsilonMoves aut . runNonEpsilonMoves aut c . runEpsilonMoves aut
 
 -- Takes all the possible matches and multiplies them by the places they can go
 -- via only epsilon moves.
@@ -74,7 +74,7 @@ runEpsilonMoves automaton state = state { possibleMatches = new_possibilities }
   where new_possibilities = S.union
             (possibleMatches state) (collapseSet (S.map getEpsilonFriends (possibleMatches state)))
         getEpsilonFriends :: PossibleMatch -> S.Set PossibleMatch
-        getEpsilonFriends (P {matchState = s, startIndex = i}) =
+        getEpsilonFriends P {matchState = s, startIndex = i} =
             S.map (\new_state -> P {matchState = new_state, startIndex = i}) $
             getComponentOfType (== Epsilon) s (stateMap automaton)
 
@@ -84,7 +84,7 @@ runNonEpsilonMoves automaton char state =
     state { possibleMatches = new_possibilities }
     where new_possibilities = collapseSet $ S.map getMatches (possibleMatches state)
           getMatches :: PossibleMatch -> S.Set PossibleMatch
-          getMatches (P {matchState = s, startIndex = i}) =
+          getMatches P {matchState = s, startIndex = i} =
               S.map (\new_state -> P {matchState = new_state, startIndex = i}) $
               findNeighborsOfType (matches char) (stateMap automaton) s 
 
@@ -104,4 +104,4 @@ popFinalStates final_state state = state {
         isEnd p = matchState p == final_state
         
         toInterval :: PossibleMatch -> Interval
-        toInterval (P {startIndex = i}) = Interval (i, currentIndex state)
+        toInterval P {startIndex = i} = Interval (i, currentIndex state)

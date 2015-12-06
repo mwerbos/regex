@@ -9,8 +9,8 @@ import qualified Data.Set as S
 nLengthNodes :: Int -> [(Node,())]
 nLengthNodes n = take n $ zip [0..] (repeat ())
 
-simple_automaton :: Automaton
-simple_automaton = Automaton {
+simpleAutomaton :: Automaton
+simpleAutomaton = Automaton {
   stateMap = mkGraph (nLengthNodes 6)
                      [(0,1,T $ Single 'f'), (1,2,Epsilon), (2,3,T $ Single 'o'),
                       (3,4,Epsilon), (4,5,T $ Single 'x')],
@@ -18,8 +18,8 @@ simple_automaton = Automaton {
 }
 
 -- Automaton with a character class
-or_automaton :: Automaton
-or_automaton = Automaton {
+orAutomaton :: Automaton
+orAutomaton = Automaton {
   stateMap = mkGraph (nLengthNodes 8)
                      [(0,2,Epsilon), (0,4,Epsilon),
                       (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
@@ -29,8 +29,8 @@ or_automaton = Automaton {
 }
 
 -- Automaton with a negated character class
-neg_automaton :: Automaton
-neg_automaton = Automaton {
+negAutomaton :: Automaton
+negAutomaton = Automaton {
   stateMap = mkGraph (nLengthNodes 8)
                      [(0,2,Epsilon), (0,4,Epsilon),
                       (2,3,T $ NegChar 'y'), (4,5,T $ NegChar 'd'),
@@ -40,8 +40,8 @@ neg_automaton = Automaton {
 }
 
 -- Automaton with two character classes
-yob_dog_automaton :: Automaton
-yob_dog_automaton = Automaton {
+yobDogAutomaton :: Automaton
+yobDogAutomaton = Automaton {
   stateMap = mkGraph (nLengthNodes 14)
                      [(0,2,Epsilon), (0,4,Epsilon),
                       (2,3,T $ Single 'y'), (4,5,T $ Single 'd'),
@@ -57,18 +57,18 @@ yob_dog_automaton = Automaton {
 spec :: Spec
 spec = do
   describe "runAutomaton" $ do
-    it "runs a small automaton on a short string" $ do
+    it "runs a small automaton on a short string" $
       runAutomaton simple_automaton "the fox was " `shouldBe` [Interval (4, 7)]
-    it "runs the automaton on the minimal string" $ do
+    it "runs the automaton on the minimal string" $
       runAutomaton simple_automaton "fox" `shouldBe` [Interval (0, 3)]
-    it "runs the automaton on the a slightly less minimal string" $ do
+    it "runs the automaton on the a slightly less minimal string" $
       runAutomaton simple_automaton " fox" `shouldBe` [Interval (1, 4)]
 
-    it "runs an automaton with multiple character classes" $ do
-      runAutomaton yob_dog_automaton "dog" `shouldBe` [Interval (0, 3)]
+    it "runs an automaton with multiple character classes" $
+      runAutomaton yobDogAutomaton "dog" `shouldBe` [Interval (0, 3)]
 
   describe "runAutomatonOnce" $ do
-    it "moves to the next state on seeing the right character" $ do
+    it "moves to the next state on seeing the right character" $
       runAutomatonOnce simple_automaton initialState 'f' `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 },
@@ -77,8 +77,8 @@ spec = do
             currentIndex = 1,
             currentMatches = S.empty
           }
-    it "moves to the next state on seeing an or'ed character" $ do
-      runAutomatonOnce or_automaton initialState 'y' `shouldBe`
+    it "moves to the next state on seeing an or'ed character" $
+      runAutomatonOnce orAutomaton initialState 'y' `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 },
                                           P {matchState = 3, startIndex = 0 },
@@ -87,8 +87,8 @@ spec = do
             currentIndex = 1,
             currentMatches = S.empty
           }
-    it "moves to the next state(s) on NOT seeing a negated character" $ do
-      runAutomatonOnce neg_automaton initialState 'g' `shouldBe`
+    it "moves to the next state(s) on NOT seeing a negated character" $
+      runAutomatonOnce negAutomaton initialState 'g' `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 },
                                           P {matchState = 3, startIndex = 0 },
@@ -105,7 +105,7 @@ spec = do
             currentIndex = 1,
             currentMatches = S.empty 
           }
-      runAutomatonOnce or_automaton first_state 'o' `shouldBe`
+      runAutomatonOnce orAutomaton first_state 'o' `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 2 }],
             currentIndex = 2,
@@ -118,7 +118,7 @@ spec = do
             currentIndex = 2,
             currentMatches = S.empty
           }
-      runAutomatonOnce yob_dog_automaton first_state 'g' `shouldBe`
+      runAutomatonOnce yobDogAutomaton first_state 'g' `shouldBe`
         ProcessingState {
           possibleMatches = S.fromList [P {matchState = 0, startIndex = 3 },
                                         P {matchState = 11, startIndex = 0 }],
@@ -138,13 +138,13 @@ spec = do
             currentIndex = 2,
             currentMatches = S.fromList [Interval (0, 2)]
           }
-    it "does not move on after seeing a wrong character" $ do
+    it "does not move on after seeing a wrong character" $
       runAutomatonOnce simple_automaton initialState 'r' `shouldBe`
           initialState { possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 }],
                          currentIndex = 1 }
 
   describe "runStatesOnce" $ do
-    it "runs a small automaton on a single character" $ do
+    it "runs a small automaton on a single character" $
       runStatesOnce simple_automaton 'f' initialState `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 1, startIndex = 0 },
@@ -152,7 +152,7 @@ spec = do
             currentIndex = 0,
             currentMatches = S.empty 
           }
-    it "does not move on after seeing a wrong character" $ do
+    it "does not move on after seeing a wrong character" $
       runStatesOnce simple_automaton 'r' initialState `shouldBe`
           initialState { possibleMatches = S.empty }
     it "moves on after seeing an or'ed character" $ do
@@ -162,14 +162,14 @@ spec = do
             currentIndex = 1,
             currentMatches = S.empty
           }
-      runStatesOnce or_automaton 'o' first_state `shouldBe`
+      runStatesOnce orAutomaton 'o' first_state `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 7, startIndex = 0 }],
             currentIndex = 1,
             currentMatches = S.empty
           }
 
-  describe "runEpsilonMoves" $ do
+  describe "runEpsilonMoves" $
     it "correctly moves automaton after seeing an or'ed character" $ do
       let first_state = ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 1 },
@@ -177,7 +177,7 @@ spec = do
             currentIndex = 1,
             currentMatches = S.empty
           }
-      runEpsilonMoves or_automaton first_state `shouldBe`
+      runEpsilonMoves orAutomaton first_state `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 0, startIndex = 1},
                                P {matchState = 3, startIndex = 0},
@@ -190,18 +190,18 @@ spec = do
           }
 
   describe "runNonEpsilonMoves" $ do
-    it "runs a small automaton on a single character" $ do
+    it "runs a small automaton on a single character" $
       runNonEpsilonMoves simple_automaton 'f' initialState `shouldBe`
           ProcessingState {
             possibleMatches = S.fromList [P {matchState = 1, startIndex = 0 }],
             currentIndex = 0,
             currentMatches = S.empty
           }
-    it "does not move on after seeing a wrong character" $ do
+    it "does not move on after seeing a wrong character" $
       runNonEpsilonMoves simple_automaton 'r' initialState `shouldBe`
           initialState { possibleMatches = S.empty }
 
-  describe "popFinalStates" $ do
+  describe "popFinalStates" $
     it "grabs a single final state" $ do
       let state_with_unpopped_match = ProcessingState {
             possibleMatches = S.fromList [P {matchState = 2, startIndex = 0}],

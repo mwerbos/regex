@@ -60,14 +60,13 @@ type PartiallyParsedRegex = [MaybeParsed]
 
 -- Pre-processes regex into a nondeterministic finite state automaton
 processRegex :: Regex -> Automaton
-processRegex regex =
-    (makeAutomaton . parse . tokenize) regex
+processRegex = makeAutomaton . parse . tokenize
 
 tokenize :: Regex -> TokenizedRegex
 tokenize (Regex str) = map (\x -> (x, tokenType x)) str
 
 makeAutomaton :: ParsedRegex -> Automaton
-makeAutomaton tokens = foldl addToken emptyAutomaton tokens
+makeAutomaton = foldl addToken emptyAutomaton
 
 -- TODO gracefully handle the empty case
 emptyAutomaton :: Automaton
@@ -90,9 +89,11 @@ addMiniAutomaton mini_graph graph = Automaton {
     }
   where find_updated_node state = 
             let maybe_new_node = M.lookup state new_node_map in
-            if isJust maybe_new_node then fromJust maybe_new_node
-            else error ("Could not find state " ++ show state ++ " in map " ++ show new_node_map)
-
+            fromMaybe
+              (error
+                ("Could not find state " ++
+                   show state ++ " in map " ++ show new_node_map))
+              maybe_new_node
         (combined_graph, new_node_map) = 
             addGraphsAndTranslate (stateMap graph) (stateMap mini_graph)
 
@@ -115,8 +116,7 @@ orAutomatons first_aut second_aut
         -- base_graph: just the beginning and end nodes we add to A and B
         base_graph = mkGraph [(0,()), (1,())] []
         -- No translation needed for nodes from the base graph
-        add_epsilon_transitions overall_graph = 
-            insEdges epsilon_edges overall_graph
+        add_epsilon_transitions = insEdges epsilon_edges 
         epsilon_edges = [(translate_base_graph_node 0, translate_first_graph_node 0, Epsilon),
                          (translate_base_graph_node 0, translate_second_graph_node 0, Epsilon),
                          (translate_first_graph_node $ finalState first_aut,
@@ -140,17 +140,17 @@ combineThreeGraphs (one, two, three) =
 
 makeMiniAutomaton :: Token -> Automaton
 makeMiniAutomaton (Single c) = Automaton {
-  stateMap = insEdge (0, 1, T $ Single c) $ insNodes [(0,()), (1,())] $ empty,
+  stateMap = insEdge (0, 1, T Single c) $ insNodes [(0,()), (1,())] empty,
   finalState = 1
 }
 makeMiniAutomaton (NegChar c) = Automaton {
-  stateMap = insEdge (0, 1, T $ NegChar c) $ insNodes [(0,()), (1,())] $ empty,
+  stateMap = insEdge (0, 1, T NegChar c) $ insNodes [(0,()), (1,())] empty,
   finalState = 1
 }
 makeMiniAutomaton (CharacterClass tokens) = 
     foldl orAutomatons emptyAutomaton $ map makeMiniAutomaton tokens
 makeMiniAutomaton (NoneOf tokens) = Automaton {
-  stateMap = insEdge (0, 1, T $ NoneOf tokens) $ insNodes [(0,()), (1,())] $ empty,
+  stateMap = insEdge (0, 1, T NoneOf tokens) $ insNodes [(0,()), (1,())] empty,
   finalState = 1
 }
 makeMiniAutomaton (Or regex1 regex2s) =
@@ -160,28 +160,27 @@ makeMiniAutomaton (Repeated token) = connect_ends $ makeMiniAutomaton token
   where connect_ends automaton = automaton {
             stateMap = insEdge (finalState automaton, 0, Epsilon) $
                        insEdge (0, finalState automaton, Epsilon) $
-                       (stateMap automaton)
+                       stateMap automaton
         }
 -- TODO: Think about having a smaller "SimpleToken" type that encompasses *just*
 -- the token types that can be placed on edges (Char, NegChar, Wildcard),
 -- and think about how Wildcard and NegChar affect matchesToken and whether I need to think
 -- of them as match *subsets*.
 makeMiniAutomaton Wildcard = Automaton {
-  stateMap = insEdge (0, 1, T $ Wildcard) $ insNodes [(0,()), (1,())] $ empty,
+  stateMap = insEdge (0, 1, T Wildcard) $ insNodes [(0,()), (1,())] empty,
   finalState = 1
 }
 
 parse :: TokenizedRegex -> ParsedRegex
-parse regex =
-   (forceParsed .
+parse =
+    forceParsed .
     parseRepeats .
     parseGroups .
     parseCharacterClasses .
     parseLeftovers .
     parseWildcards .
     parseEscapes .
-    makeMaybeParsed)
-    regex
+    makeMaybeParsed
 
 forceParsed :: PartiallyParsedRegex -> ParsedRegex
 forceParsed (Unparsed (c,t):rest) = error $ "Could not parse char: " ++ [c]
@@ -241,7 +240,7 @@ makeGroupPiles tokens = final_parse
         add_to_last :: a -> [[a]] -> [[a]]
         add_to_last x xss = all_but_last xss ++ [last xss ++ [x]]
         all_but_last :: [a] -> [a]
-        all_but_last (x:y:xs) = x:(all_but_last (y:xs))
+        all_but_last (x:y:xs) = x:all_but_last (y:xs)
         all_but_last [x] = []
         all_but_last [] = error "encountered group section with no elements"
 
@@ -251,7 +250,7 @@ parseCharacterClasses tokens = map (innerParseCharacterClass . maybeNegate) (mak
 -- For each PartiallyParsed CharacterClass, if it starts with a carat,
 -- negates the group.
 maybeNegate :: MaybeParsed -> MaybeParsed
-maybeNegate (PartiallyParsedCharacterClass ((Unparsed (_, Carat)):rest) Unnegated) =
+maybeNegate (PartiallyParsedCharacterClass (Unparsed (_, Carat):rest) Unnegated) =
   PartiallyParsedCharacterClass rest Negated
 maybeNegate other = other
 
@@ -297,20 +296,20 @@ innerParseCharacterClass other = other
 
 parseRepeats :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseRepeats (Parsed token:Unparsed (c,Star):rest) =
-    (Parsed (Repeated token)):parseRepeats rest
+    Parsed (Repeated token):parseRepeats rest
 parseRepeats (Parsed token:Unparsed (c,Plus):rest) =
-    Parsed token:(Parsed (Repeated token)):parseRepeats rest
+    Parsed token:Parsed (Repeated token):parseRepeats rest
 parseRepeats (_:Unparsed (c,Star):rest) = error "Unexpected *"
 parseRepeats (_:Unparsed (c,Plus):rest) = error "Unexpected +"
 parseRepeats (Unparsed (c,Star):rest) = error "Unexpected *"
 parseRepeats (Unparsed (c,Plus):rest) = error "Unexpected +"
 parseRepeats (other:rest) = other:parseRepeats rest
-parseRepeats [] = trace ("Parsing repeats from empty list") []
+parseRepeats [] = trace "Parsing repeats from empty list" []
 
 parseWildcards :: PartiallyParsedRegex -> PartiallyParsedRegex
 parseWildcards = map convertDots
     where convertDots :: MaybeParsed -> MaybeParsed
-          convertDots (Unparsed ('.',Dot)) = Parsed (Wildcard)
+          convertDots (Unparsed ('.',Dot)) = Parsed Wildcard
           convertDots other = other
 
 parseLeftovers :: PartiallyParsedRegex -> PartiallyParsedRegex

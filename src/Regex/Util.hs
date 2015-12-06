@@ -70,7 +70,7 @@ constructNewNodeLabels base_graph extra_graph =
   foldl add_tuple_to_map M.empty zipped_translation_tuples
   where add_tuple_to_map :: M.Map Node Node -> (Node, Node) -> M.Map Node Node
         add_tuple_to_map map_ (old_label, new_label) = M.insert old_label new_label map_
-        zipped_translation_tuples = zip old_node_labels (newNodes (length $ old_node_labels) base_graph)
+        zipped_translation_tuples = zip old_node_labels (newNodes (length old_node_labels) base_graph)
         old_node_labels = nodes extra_graph
 
 relabelNode :: (Show a, Show b) => Context a b -> RelabelContext a b -> RelabelContext a b

@@ -5,7 +5,7 @@ import Regex
 import Control.Exception (evaluate)
 
 spec :: Spec
-spec = do
+spec =
   describe "matchExpression" $ do
     context "finding simple matches" $ do
       it "correctly finds a single match" $ do

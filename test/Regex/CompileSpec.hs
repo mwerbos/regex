@@ -11,14 +11,14 @@ nLengthNodes n = take n $ zip [0..] (repeat ())
 spec :: Spec
 spec = do
   describe "processRegex" $ do
-    it "processes a regex with a repeated token" $ do
+    it "processes a regex with a repeated token" $
       processRegex (Regex "a*") `shouldBe` Automaton {
         stateMap = mkGraph [(0,()), (1,())]
                            [(0,1,T $ Single 'a'), (1,0,Epsilon),
                             (0,1,Epsilon)],
         finalState = 1
       }
-    it "processes a more complex regex with a repeated token" $ do
+    it "processes a more complex regex with a repeated token" $
       processRegex (Regex "ba+c") `shouldBe` Automaton {
         stateMap = mkGraph (nLengthNodes 8)
                            [(0,1,T $ Single 'b'), (1,2,Epsilon),
@@ -53,12 +53,12 @@ spec = do
             finalState = 9
           }
       processRegex regex `shouldBe` automaton
-    it "processes a regex with an escaped backslash" $ do
+    it "processes a regex with an escaped backslash" $
       processRegex (Regex "\\\\") `shouldBe` Automaton {
             stateMap = mkGraph [(0,()), (1,())] [(0,1,T $ Single '\\')],
             finalState = 1
           }
-    it "processes a regex with an escaped bracket" $ do
+    it "processes a regex with an escaped bracket" $
       processRegex (Regex "\\[") `shouldBe` Automaton {
             stateMap = mkGraph [(0,()), (1,())] [(0,1,T $ Single '[')],
             finalState = 1
@@ -73,10 +73,9 @@ spec = do
           }
       processRegex (Regex "[\\]\\[]") `shouldBe` automaton
   describe "tokenize" $ do
-    it "tokenizes a simple expression" $ do
-      let regex = Regex "hi"
-      tokenize regex `shouldBe` [('h', OtherChar), ('i', OtherChar)]
-    it "tokenizes with a repeated character" $ do
+    it "tokenizes a simple expression" $
+      tokenize (Regex "hi") `shouldBe` [('h', OtherChar), ('i', OtherChar)]
+    it "tokenizes with a repeated character" $
       tokenize (Regex "a*") `shouldBe` [('a', OtherChar), ('*', Star)]
     it "tokenizes an expression with negated character class" $ do
       let regex = Regex "[^yd]o"
@@ -87,7 +86,7 @@ spec = do
     it "parses a simple expression" $ do
       let tokenized = [('f', OtherChar), ('o', OtherChar), ('x', OtherChar)]
       parse tokenized `shouldBe` [Single 'f', Single 'o', Single 'x']
-    it "parses with a repeated token" $ do
+    it "parses with a repeated token" $
       parse [('a', OtherChar), ('*', Star)] `shouldBe` [Repeated (Single 'a')]
     it "parses with a negated character class" $ do
       let tokenized = [('[', LBracket), ('^', Carat),
@@ -97,19 +96,19 @@ spec = do
     it "parses a character group" $ do
       let tokenized = [('(', LParen), ('a', OtherChar), ('|', Pipe),
                        ('b', OtherChar), (')', RParen)]
-      parse tokenized `shouldBe` [Or [Single 'a'] [[(Single 'b')]]]
-  describe "parseGroups" $ do
+      parse tokenized `shouldBe` [Or [Single 'a'] [[Single 'b']]]
+  describe "parseGroups" $
     it "parses with a simple group" $ do
-      let partially_parsed = [(Unparsed ('(', LParen)), (Unparsed ('a', OtherChar)),
-                              (Unparsed ('|', Pipe)), (Unparsed ('b', OtherChar)),
-                              (Unparsed (')', RParen))]
-      parseGroups partially_parsed `shouldBe` [Parsed (Or [Single 'a'] [[(Single 'b')]])]
-  describe "parseRepeats" $ do
-    it "parses with a repeated token" $ do
+      let partially_parsed = [Unparsed ('(', LParen), Unparsed ('a', OtherChar),
+                              Unparsed ('|', Pipe), Unparsed ('b', OtherChar),
+                              Unparsed (')', RParen)]
+      parseGroups partially_parsed `shouldBe` [Parsed (Or [Single 'a'] [[Single 'b']])]
+  describe "parseRepeats" $
+    it "parses with a repeated token" $
       parseRepeats [Parsed (Single 'a'), Unparsed ('*', Star)] `shouldBe`
           [Parsed (Repeated (Single 'a'))]
 
-  describe "makeMiniAutomaton" $ do
+  describe "makeMiniAutomaton" $
     it "makes a mini automaton with a character class" $ do
       let token = CharacterClass [Single 'y', Single 'd']
           simple_automaton = Automaton {
@@ -183,7 +182,7 @@ spec = do
           }
       orAutomatons aut emptyAutomaton `shouldBe` aut
       orAutomatons emptyAutomaton aut `shouldBe` aut
-  describe "combineThreeGraphs" $ do
+  describe "combineThreeGraphs" $ 
     it "combines three graphs correctly" $ do
       let first = mkGraph [(0,()), (1,())] [(0,1,T $ Single 'h')]
           second = mkGraph [(0,()), (1,())] [(0,1,T $ Single 'i')]
