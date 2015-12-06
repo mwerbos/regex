@@ -103,6 +103,13 @@ spec = do
                               Unparsed ('|', Pipe), Unparsed ('b', OtherChar),
                               Unparsed (')', RParen)]
       parseGroups partially_parsed `shouldBe` [Parsed (Or [Single 'a'] [[Single 'b']])]
+  describe "makeGroupPiles" $
+    it "makes piles with a simple group" $ do
+      let partially_parsed = [Unparsed ('(', LParen), Unparsed ('a', OtherChar),
+                              Unparsed ('|', Pipe), Unparsed ('b', OtherChar),
+                              Unparsed (')', RParen)]
+      makeGroupPiles partially_parsed `shouldBe`
+          [PartiallyParsedGroup [Unparsed ('a', OtherChar)] [[Unparsed ('b', OtherChar)]]]
   describe "parseRepeats" $
     it "parses with a repeated token" $
       parseRepeats [Parsed (Single 'a'), Unparsed ('*', Star)] `shouldBe`

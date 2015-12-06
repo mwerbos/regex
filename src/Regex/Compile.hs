@@ -237,8 +237,9 @@ makeGroupPiles tokens = final_parse
         grab_tokens (GroupAfterFirstElem regex regexes, parsed) other_token =
             (GroupAfterFirstElem regex (add_to_last other_token regexes), parsed)
 
-        add_to_last :: a -> [[a]] -> [[a]]
-        add_to_last x xss = all_but_last xss ++ [last xss ++ [x]]
+        add_to_last :: Show a => a -> [[a]] -> [[a]]
+        add_to_last x xss = trace ("adding " ++ show x ++ " to " ++ show xss) $
+            all_but_last xss ++ [last xss ++ [x]]
         all_but_last :: [a] -> [a]
         all_but_last (x:y:xs) = x:all_but_last (y:xs)
         all_but_last [x] = []
