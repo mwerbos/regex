@@ -8,13 +8,15 @@ data Regex = Regex String deriving (Show, Eq)
 -- An interval. (x,y) => y must > x
 data Interval = Interval (Int, Int) deriving (Show, Eq, Ord)
 
--- An edge in the graph can be a token or an epsilon-transition
+-- An edge in the graph can be a simple token or an epsilon-transition
 -- (a transition requiring 0 characters to match)
-data Edge = T Token | Epsilon deriving (Show, Eq, Ord)
+data Edge = T SimpleToken | Epsilon deriving (Show, Eq, Ord)
 
+-- Tokens that have to be represented as primitives for matching.
 data SimpleToken =
     Single Char |
     NegChar Char |
+    NoneOf [Char] |
     Wildcard
   deriving (Show, Eq, Ord)
 
@@ -22,7 +24,6 @@ data SimpleToken =
 data Token =
     Simple SimpleToken |
     Group [SimpleToken] |
-    NoneOf [SimpleToken] |
     Or [Token] [[Token]] |
     Repeated Token
   deriving (Show, Eq, Ord)

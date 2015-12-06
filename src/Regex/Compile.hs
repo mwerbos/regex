@@ -232,8 +232,8 @@ innerParseGroup (PartiallyParsedGroup token_tuples Unnegated) =
     Parsed (Group 
         (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
 innerParseGroup (PartiallyParsedGroup token_tuples Negated) =
-    Parsed (NoneOf
-        (forceParsed $ parseLeftovers $ parseWildcards $ parseEscapes token_tuples))
+    Parsed (Simple $ NoneOf
+        (forceParsed $ parseLeftovers $ parseEscapes token_tuples))
 innerParseGroup other = other
 
 
